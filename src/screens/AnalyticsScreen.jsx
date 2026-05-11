@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Clock, Sigma, ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
+import { Clock, Sigma, ChevronLeft, ChevronRight } from 'lucide-react';
 import Filters from '../components/Filters.jsx';
 import Heatmap from '../components/Heatmap.jsx';
 import Spider from '../components/Spider.jsx';

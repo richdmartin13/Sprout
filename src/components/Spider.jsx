@@ -13,7 +13,7 @@ export default function Spider({ axes, layers, size = 280 }) {
 
     // Compute global max across layers, or per-layer if max provided
     const layerPolys = layers.map((layer) => {
-      const max = layer.max ?? Math.max(...layer.values, 0) || 1;
+      const max = layer.max ?? (Math.max(...layer.values, 0) || 1);
       const points = layer.values.map((v, i) => {
         const ang = -Math.PI / 2 + (i * 2 * Math.PI) / n;
         const r = (Math.max(0, v) / max) * radius;
