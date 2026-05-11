@@ -1,10 +1,32 @@
-import React, { useRef } from 'react';
-import { ChevronRight, Download, Upload, Trash2, Moon, Sun } from 'lucide-react';
-import { SCHEMES, TYPE_LABELS } from '../lib/theme.js';
-import { exportJson, importJson, saveData } from '../lib/storage.js';
+import React, { useRef, useState } from 'react';
+import {
+  ChevronRight,
+  ChevronDown,
+  Download,
+  Upload,
+  Trash2,
+  Moon,
+  Sun,
+  Palette,
+  LayoutGrid,
+  PenLine,
+  BarChart3,
+  Database,
+} from 'lucide-react';
+import { SCHEMES } from '../lib/theme.js';
+import { exportJson, importJson } from '../lib/storage.js';
 
 export default function SettingsScreen({ data, prefs, setPrefs, setData, onAlert, onConfirm }) {
   const importInputRef = useRef(null);
+  // Track which groups are open; appearance open by default.
+  const [open, setOpen] = useState({
+    appearance: true,
+    behavior: false,
+    fields: false,
+    sections: false,
+    data: false,
+  });
+  const toggleOpen = (k) => setOpen((o) => ({ ...o, [k]: !o[k] }));
 
   const toggleSection = (key) => {
     setPrefs({
@@ -32,14 +54,14 @@ export default function SettingsScreen({ data, prefs, setPrefs, setData, onAlert
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch {
-      // iOS PWA fallback: show export sheet
-      onAlert('Export', 'Copy the JSON below.\n\n' + json.slice(0, 1500) + (json.length > 1500 ? '\n…(truncated)' : ''));
+      onAlert(
+        'Export',
+        'Copy the JSON below.\n\n' + json.slice(0, 1500) + (json.length > 1500 ? '\n…(truncated)' : '')
+      );
     }
   };
 
-  const onImport = () => {
-    importInputRef.current?.click();
-  };
+  const onImport = () => importInputRef.current?.click();
 
   const onFile = (e) => {
     const f = e.target.files?.[0];
@@ -53,7 +75,7 @@ export default function SettingsScreen({ data, prefs, setPrefs, setData, onAlert
           'Import complete',
           `${summary.newHabits} new habits, ${summary.newLogs} new logs added.`
         );
-      } catch (err) {
+      } catch {
         onAlert('Import failed', 'The selected file could not be parsed as Sprout JSON.');
       }
     };
@@ -73,7 +95,7 @@ export default function SettingsScreen({ data, prefs, setPrefs, setData, onAlert
     );
   };
 
-  const SECTIONS = [
+  const ANALYTICS_SECTIONS = [
     ['spider', 'Spider chart'],
     ['hourly', 'Hourly chart'],
     ['heatmap', 'Heatmap'],
@@ -88,15 +110,15 @@ export default function SettingsScreen({ data, prefs, setPrefs, setData, onAlert
   ];
 
   const TRACKS = [
-    ['mood', 'Mood'],
-    ['energy', 'Energy'],
-    ['ease', 'Ease (start habits)'],
-    ['duration', 'Duration (start habits)'],
-    ['resist', 'Resistance (stop habits)'],
-    ['trigger', 'Trigger (stop habits)'],
-    ['context', 'Context (neutral habits)'],
-    ['tags', 'Tags'],
-    ['notes', 'Notes'],
+    ['mood', 'Mood', 'How you felt at log time'],
+    ['energy', 'Energy', 'Your energy level at log time'],
+    ['ease', 'Ease', 'Star-rated ease (start habits only)'],
+    ['duration', 'Duration', 'Minutes spent (start habits only)'],
+    ['resist', 'Resistance', 'Did you resist? (stop habits only)'],
+    ['trigger', 'Trigger', 'What set it off (stop habits only)'],
+    ['context', 'Context', 'Where/when it happened (neutral habits)'],
+    ['tags', 'Tags', 'Free-form labels'],
+    ['notes', 'Notes', 'Free-form text'],
   ];
 
   return (
@@ -105,9 +127,14 @@ export default function SettingsScreen({ data, prefs, setPrefs, setData, onAlert
         <h1>Settings</h1>
       </div>
       <div className="settings">
-        {/* Appearance */}
-        <div className="settings-group">
-          <h2>Appearance</h2>
+        {/* ── Appearance ── */}
+        <Group
+          open={open.appearance}
+          onToggle={() => toggleOpen('appearance')}
+          icon={<Palette />}
+          title="Appearance"
+          sub="Theme and accent color"
+        >
           <Toggle
             label="Dark mode"
             sub={prefs.dark ? 'On' : 'Off'}
@@ -132,11 +159,16 @@ export default function SettingsScreen({ data, prefs, setPrefs, setData, onAlert
               />
             ))}
           </div>
-        </div>
+        </Group>
 
-        {/* Layout */}
-        <div className="settings-group">
-          <h2>Layout</h2>
+        {/* ── Layout & Behavior ── */}
+        <Group
+          open={open.behavior}
+          onToggle={() => toggleOpen('behavior')}
+          icon={<LayoutGrid />}
+          title="Layout & Behavior"
+          sub="Card density, tap behavior, defaults"
+        >
           <Toggle
             label="Streak badges"
             sub="Show streak (start/neutral) or days-since (stop)"
@@ -169,34 +201,48 @@ export default function SettingsScreen({ data, prefs, setPrefs, setData, onAlert
               </button>
             </div>
           </div>
-        </div>
-
-        {/* Habits behavior */}
-        <div className="settings-group">
-          <h2>Tap behavior</h2>
           <Toggle
             label="Repeat last by default"
             sub="Tapping a habit auto-fills the most recent log's details"
             value={prefs.repeatLastDefault}
             onChange={(v) => setPrefs({ ...prefs, repeatLastDefault: v })}
           />
-        </div>
-
-        {/* Analytics */}
-        <div className="settings-group">
-          <h2>Analytics defaults</h2>
           <Toggle
-            label="Open in Day view"
+            label="Open analytics in Day view"
             sub="Analytics defaults to Day instead of All-time"
             value={prefs.insDay}
             onChange={(v) => setPrefs({ ...prefs, insDay: v })}
           />
-        </div>
+        </Group>
 
-        {/* Sections */}
-        <div className="settings-group">
-          <h2>Analytics — show sections</h2>
-          {SECTIONS.map(([key, label]) => (
+        {/* ── Logging Fields ── */}
+        <Group
+          open={open.fields}
+          onToggle={() => toggleOpen('fields')}
+          icon={<PenLine />}
+          title="Logging Fields"
+          sub="Which fields appear when logging a habit"
+        >
+          {TRACKS.map(([key, label, sub]) => (
+            <Toggle
+              key={key}
+              label={label}
+              sub={sub}
+              value={prefs.track[key]}
+              onChange={() => toggleTrack(key)}
+            />
+          ))}
+        </Group>
+
+        {/* ── Analytics Sections ── */}
+        <Group
+          open={open.sections}
+          onToggle={() => toggleOpen('sections')}
+          icon={<BarChart3 />}
+          title="Analytics Sections"
+          sub="Which insights to show on the analytics screen"
+        >
+          {ANALYTICS_SECTIONS.map(([key, label]) => (
             <Toggle
               key={key}
               label={label}
@@ -204,24 +250,16 @@ export default function SettingsScreen({ data, prefs, setPrefs, setData, onAlert
               onChange={() => toggleSection(key)}
             />
           ))}
-        </div>
+        </Group>
 
-        {/* Track */}
-        <div className="settings-group">
-          <h2>Loggable fields</h2>
-          {TRACKS.map(([key, label]) => (
-            <Toggle
-              key={key}
-              label={label}
-              value={prefs.track[key]}
-              onChange={() => toggleTrack(key)}
-            />
-          ))}
-        </div>
-
-        {/* Data */}
-        <div className="settings-group">
-          <h2>Data</h2>
+        {/* ── Data ── */}
+        <Group
+          open={open.data}
+          onToggle={() => toggleOpen('data')}
+          icon={<Database />}
+          title="Data"
+          sub="Backup, restore, and clear"
+        >
           <div className="settings-row button" onClick={onExport}>
             <Download style={{ color: 'var(--muted)' }} />
             <div className="col">
@@ -253,12 +291,28 @@ export default function SettingsScreen({ data, prefs, setPrefs, setData, onAlert
             onChange={onFile}
             style={{ display: 'none' }}
           />
-        </div>
+        </Group>
 
         <div className="muted center" style={{ fontSize: 11, padding: '8px 0 16px' }}>
           Sprout · all data lives locally on this device
         </div>
       </div>
+    </div>
+  );
+}
+
+function Group({ open, onToggle, icon, title, sub, children }) {
+  return (
+    <div className={`settings-group collapsible ${open ? 'open' : ''}`}>
+      <button className="settings-group-header" onClick={onToggle} aria-expanded={open}>
+        <span className="settings-group-icon">{icon}</span>
+        <span className="col">
+          <span className="settings-group-title">{title}</span>
+          {sub && <span className="settings-group-sub">{sub}</span>}
+        </span>
+        <ChevronDown className={`settings-group-chev ${open ? 'open' : ''}`} />
+      </button>
+      {open && <div className="settings-group-body">{children}</div>}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Clock, Sigma, ChevronLeft, ChevronRight } from 'lucide-react';
 import Filters from '../components/Filters.jsx';
 import Heatmap from '../components/Heatmap.jsx';
@@ -273,16 +273,59 @@ function TrendsCard({ habits }) {
 function SpiderCard({ habits, allHabits, dateFilter }) {
   const SUB = [
     { id: 'freq', label: 'Frequency' },
+    { id: 'tags', label: 'Tags' },
     { id: 'mood', label: 'Mood' },
     { id: 'energy', label: 'Energy' },
     { id: 'ease', label: 'Ease' },
     { id: 'resist', label: 'Resistance' },
   ];
   const [sub, setSub] = useState('freq');
+  // habitId='' means "all (currently filtered) habits"
+  const [habitId, setHabitId] = useState('');
+  // tag='' means "all tags"
+  const [tag, setTag] = useState('');
+
+  // Build the set of habits to analyze: scoped to picker if chosen, else all.
+  // Then apply tag filter at the log level if a tag is picked.
+  const { scoped, tagFiltered } = useMemo(() => {
+    const baseHabits = habitId
+      ? habits.filter((h) => h.id === habitId)
+      : habits;
+    if (!tag) {
+      return { scoped: baseHabits, tagFiltered: baseHabits };
+    }
+    // Tag filter: keep only logs that contain the chosen tag
+    const tagged = baseHabits
+      .map((h) => ({
+        ...h,
+        logs: h.logs.filter((l) => Array.isArray(l.tags) && l.tags.includes(tag)),
+      }))
+      .filter((h) => h.logs.length > 0);
+    return { scoped: baseHabits, tagFiltered: tagged };
+  }, [habits, habitId, tag]);
+
+  // Tag options come from the (habit-scoped) base set so picking a habit narrows
+  // the tag dropdown to that habit's tags.
+  const tagOptions = useMemo(
+    () => tagFrequency(scoped, dateFilter).slice(0, 40),
+    [scoped, dateFilter]
+  );
+
+  // If the selected habit gets filtered away, reset the picker.
+  useEffect(() => {
+    if (habitId && !habits.some((h) => h.id === habitId)) setHabitId('');
+  }, [habits, habitId]);
+  // If the selected tag is no longer present in the current scope, clear it.
+  useEffect(() => {
+    if (tag && !tagOptions.some((t) => t.tag === tag)) setTag('');
+  }, [tagOptions, tag]);
+
+  // The habit set the spider is actually computed against
+  const set = tagFiltered;
 
   const data = useMemo(() => {
     if (sub === 'freq') {
-      const counts = habits
+      const counts = set
         .map((h) => ({
           name: h.name,
           v: dateFilter
@@ -298,8 +341,18 @@ function SpiderCard({ habits, allHabits, dateFilter }) {
         layers: [{ label: 'Frequency', color: 'var(--accent)', values: counts.map((c) => c.v) }],
       };
     }
+    if (sub === 'tags') {
+      // When a single habit is picked, this shows that habit's tag mix.
+      // Otherwise it shows the top tags across the (possibly tag-filtered) set.
+      const list = tagFrequency(set, dateFilter).slice(0, 8);
+      if (list.length < 3) return null;
+      return {
+        axes: list.map((t) => t.tag),
+        layers: [{ label: 'Tag uses', color: 'var(--accent)', values: list.map((t) => t.count) }],
+      };
+    }
     if (sub === 'mood') {
-      const m = moodCounts(habits, dateFilter);
+      const m = moodCounts(set, dateFilter);
       const labels = ['good', 'meh', 'low', 'stressed', 'tired', 'fired up'].filter((k) => m.has(k));
       if (labels.length < 3) return null;
       return {
@@ -308,7 +361,7 @@ function SpiderCard({ habits, allHabits, dateFilter }) {
       };
     }
     if (sub === 'energy') {
-      const m = energyCounts(habits, dateFilter);
+      const m = energyCounts(set, dateFilter);
       const labels = ['high', 'medium', 'low energy'].filter((k) => m.has(k));
       if (labels.length < 3) return null;
       return {
@@ -317,7 +370,7 @@ function SpiderCard({ habits, allHabits, dateFilter }) {
       };
     }
     if (sub === 'ease') {
-      const arr = easeAvgs(habits, dateFilter).slice(0, 8);
+      const arr = easeAvgs(set, dateFilter).slice(0, 8);
       if (arr.length < 3) return null;
       return {
         axes: arr.map((a) => a.habit.name),
@@ -325,7 +378,7 @@ function SpiderCard({ habits, allHabits, dateFilter }) {
       };
     }
     if (sub === 'resist') {
-      const arr = habits.filter((h) => h.type === 'st').map((h) => {
+      const arr = set.filter((h) => h.type === 'st').map((h) => {
         const r = resistRate(h);
         return r ? { name: h.name, v: r.rate * 5 } : null;
       }).filter(Boolean);
@@ -336,7 +389,13 @@ function SpiderCard({ habits, allHabits, dateFilter }) {
       };
     }
     return null;
-  }, [habits, sub, dateFilter]);
+  }, [set, sub, dateFilter]);
+
+  // Available habit options for picker (only habits with at least one log).
+  const habitOptions = useMemo(
+    () => habits.filter((h) => h.logs.length > 0),
+    [habits]
+  );
 
   return (
     <div className="section">
@@ -347,6 +406,26 @@ function SpiderCard({ habits, allHabits, dateFilter }) {
             {s.label}
           </button>
         ))}
+      </div>
+      <div className="spider-filters">
+        <label className="spider-filter">
+          <span>Habit</span>
+          <select value={habitId} onChange={(e) => setHabitId(e.target.value)}>
+            <option value="">All habits</option>
+            {habitOptions.map((h) => (
+              <option key={h.id} value={h.id}>{h.name}</option>
+            ))}
+          </select>
+        </label>
+        <label className="spider-filter">
+          <span>Tag</span>
+          <select value={tag} onChange={(e) => setTag(e.target.value)}>
+            <option value="">All tags</option>
+            {tagOptions.map((t) => (
+              <option key={t.tag} value={t.tag}>{t.tag} ({t.count})</option>
+            ))}
+          </select>
+        </label>
       </div>
       {data ? (
         <Spider axes={data.axes} layers={data.layers} />

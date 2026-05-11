@@ -165,52 +165,109 @@ body::after {
 .iconbtn svg { width: 19px; height: 19px; }
 .iconbtn.ghost { background: transparent; border: none; }
 
-/* ─── Bottom nav ─── */
+/* ─── Bottom nav (iOS 26 Liquid Glass — floating capsule) ─── */
 .bnav {
   position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 4px;
-  background: var(--surface);
-  backdrop-filter: blur(30px) saturate(180%);
-  -webkit-backdrop-filter: blur(30px) saturate(180%);
-  border-top: 1px solid var(--border);
+  left: 50%;
+  bottom: calc(14px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 6px;
+  border-radius: 999px;
+  /* Translucent glass tint — heavier saturation for the iOS 26 look */
+  background: var(--glass-nav-bg);
+  border: 1px solid var(--glass-nav-border);
+  backdrop-filter: blur(40px) saturate(220%);
+  -webkit-backdrop-filter: blur(40px) saturate(220%);
+  /* Outer drop shadow + subtle inner highlight via box-shadow */
+  box-shadow:
+    0 1px 0 var(--glass-nav-inner-top) inset,
+    0 -1px 0 var(--glass-nav-inner-bottom) inset,
+    0 10px 30px rgba(0, 0, 0, 0.32),
+    0 2px 8px rgba(0, 0, 0, 0.18);
   z-index: 50;
+  isolation: isolate;
+  overflow: hidden;
+}
+/* Specular highlight pass on the capsule itself */
+.bnav::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.14) 0%,
+    rgba(255, 255, 255, 0.04) 38%,
+    rgba(255, 255, 255, 0) 60%
+  );
+  mix-blend-mode: overlay;
+  z-index: 0;
 }
 .bnav button {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  padding: 10px 6px 6px;
-  border-radius: 14px;
-  color: var(--muted);
-  transition: color 0.18s ease, background 0.18s ease;
   position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 44px;
+  padding: 0 16px;
+  border-radius: 999px;
+  color: var(--muted);
+  background: transparent;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  transition:
+    color 220ms cubic-bezier(0.32, 0.72, 0, 1),
+    background 220ms cubic-bezier(0.32, 0.72, 0, 1),
+    padding 260ms cubic-bezier(0.32, 0.72, 0, 1),
+    transform 200ms cubic-bezier(0.32, 0.72, 0, 1);
+  -webkit-tap-highlight-color: transparent;
+}
+.bnav button:active {
+  transform: scale(0.94);
 }
 .bnav button.on {
   color: var(--accent);
+  background: var(--glass-nav-active-bg);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.22) inset,
+    0 -1px 0 rgba(255, 255, 255, 0.05) inset,
+    0 2px 10px var(--accent-glow);
 }
-.bnav button.on::before {
-  content: '';
-  position: absolute;
-  top: 2px;
-  width: 28px;
-  height: 3px;
-  border-radius: 3px;
-  background: var(--accent);
-  box-shadow: 0 0 12px var(--accent-glow);
+.bnav button svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
 }
-.bnav svg { width: 22px; height: 22px; }
-.bnav span {
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+/* Labels hidden by default — only the active tab shows its label, iOS 26 style */
+.bnav button span {
+  max-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateX(-4px);
+  transition:
+    max-width 280ms cubic-bezier(0.32, 0.72, 0, 1),
+    opacity 220ms cubic-bezier(0.32, 0.72, 0, 1),
+    transform 280ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+.bnav button.on span {
+  max-width: 120px;
+  opacity: 1;
+  transform: translateX(0);
+}
+/* Compact safety for tiny screens */
+@media (max-width: 360px) {
+  .bnav button { padding: 0 12px; gap: 5px; }
+  .bnav button.on { padding: 0 14px; }
 }
 
 /* ─── FAB ─── */
@@ -993,6 +1050,74 @@ body::after {
   padding: 14px 16px 10px;
   position: relative;
 }
+/* Collapsible group header */
+.settings-group.collapsible > .settings-group-header {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 16px;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.settings-group.collapsible > .settings-group-header:active {
+  background: var(--glass-tint);
+}
+.settings-group-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-dim);
+  color: var(--accent);
+  flex-shrink: 0;
+}
+.settings-group-icon svg { width: 18px; height: 18px; }
+.settings-group-header .col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.settings-group-title {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+.settings-group-sub {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 1px;
+}
+.settings-group-chev {
+  width: 18px;
+  height: 18px;
+  color: var(--muted);
+  transition: transform 240ms cubic-bezier(0.32, 0.72, 0, 1);
+  flex-shrink: 0;
+}
+.settings-group-chev.open {
+  transform: rotate(180deg);
+}
+.settings-group-body {
+  position: relative;
+  z-index: 1;
+  border-top: 1px solid var(--border);
+  animation: settings-group-reveal 260ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+@keyframes settings-group-reveal {
+  from { opacity: 0; transform: translateY(-3px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 .settings-row {
   display: flex;
   align-items: center;
@@ -1161,6 +1286,55 @@ body::after {
 .subtabs button.on {
   background: var(--accent);
   color: #fff;
+}
+
+/* Spider per-card filters (habit + tag dropdowns) */
+.spider-filters {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.spider-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1 1 140px;
+  min-width: 0;
+}
+.spider-filter > span {
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding-left: 2px;
+}
+.spider-filter select {
+  appearance: none;
+  -webkit-appearance: none;
+  background: var(--surface-solid-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 9px 30px 9px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+    linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+  background-position: right 14px center, right 9px center;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.spider-filter select:focus {
+  outline: none;
+  border-color: var(--accent-border);
+  box-shadow: 0 0 0 3px var(--accent-dim);
 }
 
 /* Bars */

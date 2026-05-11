@@ -70,6 +70,11 @@ export const BASE = {
     glassTint: 'rgba(255,255,255,0.04)',
     glassHighlight: 'rgba(255,255,255,0.10)',
     overlay: 'rgba(8,8,16,0.55)',
+    glassNavBg: 'rgba(28,28,42,0.55)',
+    glassNavBorder: 'rgba(255,255,255,0.14)',
+    glassNavActiveBg: 'rgba(255,255,255,0.10)',
+    glassNavInnerTop: 'rgba(255,255,255,0.18)',
+    glassNavInnerBottom: 'rgba(255,255,255,0.04)',
   },
   light: {
     bg: '#f4f1fa',
@@ -87,6 +92,11 @@ export const BASE = {
     glassTint: 'rgba(255,255,255,0.55)',
     glassHighlight: 'rgba(255,255,255,0.85)',
     overlay: 'rgba(20,16,40,0.30)',
+    glassNavBg: 'rgba(255,255,255,0.62)',
+    glassNavBorder: 'rgba(20,16,40,0.10)',
+    glassNavActiveBg: 'rgba(255,255,255,0.85)',
+    glassNavInnerTop: 'rgba(255,255,255,0.80)',
+    glassNavInnerBottom: 'rgba(20,16,40,0.04)',
   },
 };
 
@@ -124,6 +134,11 @@ export function applyTheme(prefs) {
   root.style.setProperty('--glass-tint', base.glassTint);
   root.style.setProperty('--glass-highlight', base.glassHighlight);
   root.style.setProperty('--overlay', base.overlay);
+  root.style.setProperty('--glass-nav-bg', base.glassNavBg);
+  root.style.setProperty('--glass-nav-border', base.glassNavBorder);
+  root.style.setProperty('--glass-nav-active-bg', base.glassNavActiveBg);
+  root.style.setProperty('--glass-nav-inner-top', base.glassNavInnerTop);
+  root.style.setProperty('--glass-nav-inner-bottom', base.glassNavInnerBottom);
 
   root.style.setProperty('--accent', scheme.accent);
   root.style.setProperty('--accent-soft', scheme.accentSoft);
