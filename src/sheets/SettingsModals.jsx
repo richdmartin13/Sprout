@@ -79,12 +79,43 @@ const TRACKS = [
 
 const CHANGELOG = [
   {
+    version: 'sprout_2025.05.12#3',
+    changes: [
+      'Icons regenerated to match brand guidelines: sprout symbol on deep-green gradient, cream/cream symbol, all sizes (16, 32, 180, 192, 512, maskable-512).',
+      'Tags now allow spaces — enter is word-by-word, comma is the delimiter between tags.',
+      'Tag input placeholder updated to show comma-separated example.',
+      'Tag chips no longer show # prefix — display tags as plain words.',
+      '"Carry last mood & energy" setting: copies mood and energy from last log onto new taps (independent of full repeat-last).',
+      '"Auto-tag recent habits" setting: habits logged in the last 5 minutes are automatically added as tags to new logs.',
+      'Both new settings are nested under "Repeat last by default" in Layout & Behavior.',
+      'Desktop background now fills full viewport height when content is short (no cream/dark gap at bottom).',
+      'Per-scheme light mode text colors: each scheme tints body/secondary/muted text and borders to match its hue.',
+      'Screen scroll restored: screen-transition wrapper correctly passes flex height to scrollable screen children.',
+      'Settings modals render at root level — always above bottom nav and side nav.',
+      'Import/export result alerts correctly appear after closing the settings modal.',
+      'PWA theme-color meta updated to match brand dark background.',
+    ],
+  },
+  {
+    version: 'sprout_2025.05.12#2',
+    changes: [
+      'Settings modals now render at the root level (above nav) on both mobile and desktop — no longer obscured by bottom nav or side nav.',
+      'Import/export result alerts close the settings modal first so the alert is always visible.',
+      'Clear all data confirm dialog closes the settings modal before opening.',
+      'Per-scheme light mode text colors: each color scheme now tints body text, secondary text, and muted text to match its hue (e.g. Ocean = blue-navy, Rose = deep pink, Ember = warm brown).',
+      'Per-scheme light mode border colors match each scheme\'s hue at low opacity.',
+      'Scroll restored: screen-transition wrapper now correctly passes flex height to .screen children.',
+      'React Native: babel-preset-expo added as devDependency (fixes "Cannot find module" error).',
+      'React Native: expo-splash-screen pinned to ~0.29.24.',
+      'In-app changelog now updated on every build.',
+    ],
+  },
+  {
     version: 'sprout_2025.05.12#1',
     changes: [
       'Brand guide applied: Playfair Display + DM Mono, brand greens + cream palette.',
       'New "Sprout" color scheme as default (brand greens #1a4a2e / #2d6e47 / #3d8f5f).',
-      'Each color scheme now has its own tuned dark-mode background color.',
-      'Text color subtly shifts to match the active color scheme\'s hue.',
+      'Each color scheme has its own tuned dark-mode background and text tints.',
       'Light mode background: brand cream (#f4f0e8).',
       'Settings redesigned: each group opens as a modal above all nav layers.',
       'Bottom nav always left-anchored; ghost FAB prevents layout jump.',
@@ -96,7 +127,6 @@ const CHANGELOG = [
       'Data export filename follows convention: sproutData_yyyy.mm.dd#hh.mm.json.',
       'React Native app created (Expo SDK 54.0.0, full feature parity).',
       'Apple Watch companion app included (src/watch/WatchApp.js).',
-      'npm dependency conflict fixed: expo-constants pinned to ~17.0.8.',
     ],
   },
   {
@@ -181,6 +211,12 @@ export default function SettingsModals({ modal, modalMeta, onClose, prefs, setPr
         </MRow>
         <Toggle label="Repeat last by default" sub="Auto-fill most recent log's details on tap"
           value={prefs.repeatLastDefault} onChange={(v) => setPrefs({ ...prefs, repeatLastDefault: v })} />
+        <div style={{ marginLeft: 18, borderLeft: '2px solid var(--border)', paddingLeft: 12, display: 'flex', flexDirection: 'column', gap: 0 }}>
+          <Toggle label="Carry last mood &amp; energy" sub="Copy mood and energy from your most recent log, even without full repeat"
+            value={prefs.repeatLastMoodEnergy} onChange={(v) => setPrefs({ ...prefs, repeatLastMoodEnergy: v })} />
+          <Toggle label="Auto-tag recent habits" sub="Automatically add habits logged in the last 5 minutes as tags"
+            value={prefs.autoTagRecentHabits} onChange={(v) => setPrefs({ ...prefs, autoTagRecentHabits: v })} />
+        </div>
         <Toggle label="Open analytics in Day view" sub="Analytics defaults to Day instead of All-time"
           value={prefs.insDay} onChange={(v) => setPrefs({ ...prefs, insDay: v })} />
       </SettingsModal>

@@ -10,6 +10,8 @@ export const DEF_PREFS = {
   compact: false,
   insDay: false,
   repeatLastDefault: false,
+  repeatLastMoodEnergy: false,   // carry last mood+energy onto new tap
+  autoTagRecentHabits: false,    // auto-tag with habits logged in last 5 min
   sections: {
     spider: true,
     hourly: true,

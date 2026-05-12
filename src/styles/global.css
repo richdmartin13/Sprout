@@ -86,7 +86,9 @@ body::after {
   display: flex;
   flex-direction: column;
   min-height: 0;
+  min-height: 100dvh;  /* ensures bg fills full viewport when content is short */
   position: relative;
+  background: var(--bg);
 }
 
 /* ─── Desktop/Tablet layout ─── */
@@ -99,6 +101,8 @@ body::after {
     flex: 1;
     flex-direction: column;
     min-width: 0;
+    min-height: 100dvh;
+    background: var(--bg);
   }
 }
 
@@ -449,6 +453,10 @@ body::after {
 
 /* ─── Tab transition ─── */
 .screen-transition {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
   animation: screen-fade-in 0.22s ease both;
 }
 @keyframes screen-fade-in {

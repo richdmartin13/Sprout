@@ -3,15 +3,15 @@ import {
   ChevronRight, Download, Upload, Trash2,
   Palette, LayoutGrid, PenLine, BarChart3, Database, ScrollText,
 } from 'lucide-react';
-import { SCHEMES } from '../lib/theme.js';
 import { exportJson, importJson } from '../lib/storage.js';
 
 /**
- * SettingsScreen — renders a flat list of group rows.
- * Modal state lives in App.jsx so modals render at the root level,
- * above the bottom nav / side nav (no stacking-context conflicts).
+ * SettingsScreen — flat list of group rows. Modal state lives in App.jsx.
+ * onOpenModal(id, meta?) — opens the named settings modal at root level.
+ * onCloseModal() — closes the settings modal (used before firing alerts so
+ *                  the alert sheet isn't obscured by the modal backdrop).
  */
-export default function SettingsScreen({ data, prefs, setPrefs, setData, onAlert, onConfirm, onOpenModal }) {
+export default function SettingsScreen({ data, prefs, setPrefs, setData, onAlert, onConfirm, onOpenModal, onCloseModal }) {
   const importInputRef = useRef(null);
 
   const onExport = () => {
@@ -30,7 +30,8 @@ export default function SettingsScreen({ data, prefs, setPrefs, setData, onAlert
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch {
-      onAlert('Export', 'Copy the JSON below.\n\n' + exportJson(data).slice(0, 1500));
+      onCloseModal();
+      onAlert('Export', 'Copy the JSON below.\n\n' + json.slice(0, 1500) + (json.length > 1500 ? '\n…(truncated)' : ''));
     }
   };
 
@@ -41,6 +42,8 @@ export default function SettingsScreen({ data, prefs, setPrefs, setData, onAlert
     if (!f) return;
     const reader = new FileReader();
     reader.onload = () => {
+      // Close the settings modal FIRST so the result alert is visible on top
+      onCloseModal();
       try {
         const { data: next, summary } = importJson(reader.result, data);
         setData(next);
@@ -54,6 +57,7 @@ export default function SettingsScreen({ data, prefs, setPrefs, setData, onAlert
   };
 
   const onClearAll = () => {
+    onCloseModal();
     onConfirm(
       'Clear all data',
       'This will permanently delete all your habits and logs. This cannot be undone.',
@@ -69,7 +73,7 @@ export default function SettingsScreen({ data, prefs, setPrefs, setData, onAlert
     { id: 'behavior',   label: 'Layout & Behavior',  sub: 'Card density, tap behavior',        icon: <LayoutGrid size={17} /> },
     { id: 'fields',     label: 'Logging Fields',     sub: 'Which fields appear when logging',  icon: <PenLine size={17} /> },
     { id: 'sections',   label: 'Analytics Sections', sub: 'Which insights to show',            icon: <BarChart3 size={17} /> },
-    { id: 'data',       label: 'Data',               sub: 'Backup, restore, and clear',        icon: <Database size={17} />, action: true },
+    { id: 'data',       label: 'Data',               sub: 'Backup, restore, and clear',        icon: <Database size={17} /> },
     { id: 'changelog',  label: 'Changelog',          sub: "What's changed between builds",     icon: <ScrollText size={17} /> },
   ];
 
@@ -83,14 +87,7 @@ export default function SettingsScreen({ data, prefs, setPrefs, setData, onAlert
             <div
               key={g.id}
               className="settings-row"
-              onClick={() => {
-                if (g.id === 'data') {
-                  // Data group opens a modal that also needs import/export wired
-                  onOpenModal(g.id, { onExport, onImport, onClearAll });
-                } else {
-                  onOpenModal(g.id);
-                }
-              }}
+              onClick={() => onOpenModal(g.id, g.id === 'data' ? { onExport, onImport, onClearAll } : null)}
               style={i === 0 ? { borderTop: 'none' } : undefined}
             >
               <div className="settings-row-icon">{g.icon}</div>

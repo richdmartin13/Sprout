@@ -50,13 +50,25 @@ export function shiftDate(s, delta) {
   return dateStr(d);
 }
 
+// Tags allow letters, numbers, spaces, hyphens. Comma is the delimiter.
+// We normalise: trim, lowercase, collapse inner spaces, max 30 chars.
 export function slugTag(s) {
   return s
-    .toLowerCase()
     .replace(/^#+/, '')
-    .replace(/\s+/g, '-')
-    .replace(/[^a-z0-9\-_]/g, '')
-    .slice(0, 30);
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/[^a-z0-9 \-_]/g, '')
+    .slice(0, 30)
+    .trim();
+}
+
+// Parse a comma-separated string into an array of normalised tags.
+export function parseTags(str) {
+  return str
+    .split(',')
+    .map(slugTag)
+    .filter(Boolean);
 }
 
 export function nt(t) {
@@ -114,7 +126,7 @@ export function normLog(log) {
     resist: log.resist || '',
     trigger: log.trigger || '',
     context: log.context || '',
-    tags: Array.isArray(log.tags) ? log.tags.map(slugTag).filter(Boolean) : [],
+    tags: Array.isArray(log.tags) ? log.tags.map(t => slugTag(String(t))).filter(Boolean) : [],
     notes: log.notes || '',
     withHabits: Array.isArray(log.withHabits) ? log.withHabits : [],
   };

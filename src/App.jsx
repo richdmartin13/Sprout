@@ -151,6 +151,7 @@ export default function App() {
         data={data} prefs={data.prefs} setPrefs={setPrefs} setData={setData}
         onAlert={onAlert} onConfirm={onConfirm}
         onOpenModal={handleOpenSettingsModal}
+        onCloseModal={handleCloseSettingsModal}
       />
     );
   }

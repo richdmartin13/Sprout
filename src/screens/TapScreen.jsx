@@ -133,11 +133,37 @@ export default function TapScreen({
     setBounce(true);
     setTimeout(() => setBounce(false), 400);
 
-    let log = { id: uid('l'), date: todayStr(), ts: new Date().toISOString(), tags: [], withHabits: [] };
+    const now = new Date();
+    let log = { id: uid('l'), date: todayStr(), ts: now.toISOString(), tags: [], withHabits: [] };
+
+    // Repeat last full details
     if (prefs.repeatLastDefault) {
       const last = lastLog(habit);
       if (last) { const { id, date, ts, ...copy } = last; log = { ...log, ...copy }; }
     }
+
+    // Repeat last mood + energy only (sub-option of repeatLastDefault)
+    if (prefs.repeatLastMoodEnergy && !prefs.repeatLastDefault) {
+      const last = lastLog(habit);
+      if (last) {
+        if (last.mood)   log.mood   = last.mood;
+        if (last.energy) log.energy = last.energy;
+      }
+    }
+
+    // Auto-tag with habits logged in last 5 minutes
+    if (prefs.autoTagRecentHabits && habits) {
+      const FIVE_MIN = 5 * 60 * 1000;
+      const recentNames = habits
+        .filter(h => h.id !== habit.id)
+        .filter(h => h.logs.some(l => l.ts && (now - new Date(l.ts)) < FIVE_MIN))
+        .map(h => h.name.toLowerCase().replace(/\s+/g, ' ').trim().slice(0, 30));
+      if (recentNames.length) {
+        const existingTags = new Set(log.tags || []);
+        log.tags = [...existingTags, ...recentNames.filter(t => !existingTags.has(t))];
+      }
+    }
+
     if (habit.type === 'st' && !log.resist) log.resist = 'no';
     onLog(habit.id, normLog(log));
   };
