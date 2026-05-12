@@ -12,6 +12,7 @@ import {
   PenLine,
   BarChart3,
   Database,
+  ScrollText,
 } from 'lucide-react';
 import { SCHEMES } from '../lib/theme.js';
 import { exportJson, importJson } from '../lib/storage.js';
@@ -25,6 +26,7 @@ export default function SettingsScreen({ data, prefs, setPrefs, setData, onAlert
     fields: false,
     sections: false,
     data: false,
+    changelog: false,
   });
   const toggleOpen = (k) => setOpen((o) => ({ ...o, [k]: !o[k] }));
 
@@ -293,6 +295,26 @@ export default function SettingsScreen({ data, prefs, setPrefs, setData, onAlert
           />
         </Group>
 
+        {/* ── Changelog ── */}
+        <Group
+          open={open.changelog}
+          onToggle={() => toggleOpen('changelog')}
+          icon={<ScrollText />}
+          title="Changelog"
+          sub="What's changed between builds"
+        >
+          {CHANGELOG.map((build) => (
+            <div key={build.version} className="changelog-build">
+              <div className="changelog-version">{build.version}</div>
+              <ul className="changelog-list">
+                {build.changes.map((c, i) => (
+                  <li key={i}>{c}</li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </Group>
+
         <div className="muted center" style={{ fontSize: 11, padding: '8px 0 16px' }}>
           Sprout · all data lives locally on this device
         </div>
@@ -300,6 +322,62 @@ export default function SettingsScreen({ data, prefs, setPrefs, setData, onAlert
     </div>
   );
 }
+
+const CHANGELOG = [
+  {
+    version: 'Sprout.2026.05.12#2',
+    changes: [
+      'Bottom nav shifted down 28px from screen edge for better thumb reach.',
+      'Removed redundant safe-area padding (PWA handles this natively on iOS).',
+      'Added this changelog section to Settings.',
+    ],
+  },
+  {
+    version: 'Sprout.2026.05.12#1',
+    changes: [
+      'Spider graph on habit tap screen expanded to 5 modes: Tags, Mood, Energy, Ease/Resistance, Co-habits.',
+      'Spider placeholder (ghost radar + hint text) shown whenever data is insufficient, so the chart area is never blank.',
+      'Analytics spider redesigned: "All habits" overview maps every habit as an axis by frequency; "Per habit" mode lets you pick any habit and see its full 5-mode breakdown — same view as the tap screen.',
+      'Bottom nav and FAB split into two separate floating glass pills (nav left, FAB right) matching iOS 26 Photos layout.',
+      'Nav stays left-anchored on all screens; FAB pill only appears on the Home tab.',
+    ],
+  },
+  {
+    version: 'Sprout.2026.05.11#4',
+    changes: [
+      'Bottom nav redesigned as a floating Liquid Glass capsule with active-tab label expand animation (iOS 26 style).',
+      'Settings reorganized into 5 collapsible accordion groups: Appearance, Layout & Behavior, Logging Fields, Analytics Sections, Data.',
+      'Each settings group has an accent-tinted icon and animated chevron; Appearance open by default.',
+      'Analytics spider card gained Habit and Tag filter dropdowns and a new Tags sub-mode.',
+    ],
+  },
+  {
+    version: 'Sprout.2026.05.11#3',
+    changes: [
+      'Fixed build failure: Spider.jsx line 16 mixed ?? and || operators without parentheses, causing esbuild to reject the file on Render.',
+    ],
+  },
+  {
+    version: 'Sprout.2026.05.11#2',
+    changes: [
+      'Replaced sprout-glyph icon with a neon-sign leaf (glowing outline, central vein, three concentric ripple arcs below).',
+      'Monotone cool-blue palette; all 7 icon sizes regenerated plus favicon.',
+    ],
+  },
+  {
+    version: 'Sprout.2026.05.11#1',
+    changes: [
+      'Initial build: converted TapMap single-file vanilla JS spec into a Vite + React 18 PWA.',
+      'Three-tab navigation: Habits, Analytics, Settings.',
+      'Liquid Glass design system with 6 color schemes × light/dark.',
+      'Habit tap screen with tap zone, ripple/flash/bounce animations, action row, spider graph, and log list.',
+      'Analytics screen with heatmap, spider, trends, rankings, mood/energy, time patterns, tags, resistance, co-occurrence, and log sections.',
+      'Fully local: all data in localStorage, no network calls, service worker for offline/install.',
+      'PWA manifest, Apple touch icons, splash screen.',
+      'Render + GitHub deploy config included.',
+    ],
+  },
+];
 
 function Group({ open, onToggle, icon, title, sub, children }) {
   return (

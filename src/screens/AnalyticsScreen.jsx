@@ -14,6 +14,8 @@ import {
   totalCountFor,
   todayCountFor,
   tagFrequency,
+  tagFrequencyForHabit,
+  coOccurrenceFor,
   hourlyBucketsFor,
   trendsFor,
   moodCounts,
@@ -271,167 +273,204 @@ function TrendsCard({ habits }) {
 }
 
 function SpiderCard({ habits, allHabits, dateFilter }) {
-  const SUB = [
-    { id: 'freq', label: 'Frequency' },
-    { id: 'tags', label: 'Tags' },
-    { id: 'mood', label: 'Mood' },
-    { id: 'energy', label: 'Energy' },
-    { id: 'ease', label: 'Ease' },
-    { id: 'resist', label: 'Resistance' },
-  ];
-  const [sub, setSub] = useState('freq');
-  // habitId='' means "all (currently filtered) habits"
+  // Top-level mode: overview of all habits (freq map) vs drill into one habit
+  const [view, setView] = useState('overview'); // 'overview' | 'habit'
   const [habitId, setHabitId] = useState('');
-  // tag='' means "all tags"
-  const [tag, setTag] = useState('');
 
-  // Build the set of habits to analyze: scoped to picker if chosen, else all.
-  // Then apply tag filter at the log level if a tag is picked.
-  const { scoped, tagFiltered } = useMemo(() => {
-    const baseHabits = habitId
-      ? habits.filter((h) => h.id === habitId)
-      : habits;
-    if (!tag) {
-      return { scoped: baseHabits, tagFiltered: baseHabits };
-    }
-    // Tag filter: keep only logs that contain the chosen tag
-    const tagged = baseHabits
-      .map((h) => ({
-        ...h,
-        logs: h.logs.filter((l) => Array.isArray(l.tags) && l.tags.includes(tag)),
-      }))
-      .filter((h) => h.logs.length > 0);
-    return { scoped: baseHabits, tagFiltered: tagged };
-  }, [habits, habitId, tag]);
+  // Per-habit sub-mode (same as TapScreen)
+  const HABIT_SUBS = [
+    { id: 'tags',   label: 'Tags' },
+    { id: 'mood',   label: 'Mood' },
+    { id: 'energy', label: 'Energy' },
+    { id: 'ease',   label: (h) => h?.type === 'st' ? 'Resistance' : 'Ease' },
+    { id: 'co',     label: 'Co-habits' },
+  ];
+  const [habitSub, setHabitSub] = useState('tags');
 
-  // Tag options come from the (habit-scoped) base set so picking a habit narrows
-  // the tag dropdown to that habit's tags.
-  const tagOptions = useMemo(
-    () => tagFrequency(scoped, dateFilter).slice(0, 40),
-    [scoped, dateFilter]
+  const habitOptions = useMemo(() =>
+    habits.filter((h) => h.logs.length > 0),
+    [habits]
+  );
+  const selectedHabit = useMemo(() =>
+    habitOptions.find((h) => h.id === habitId) || null,
+    [habitOptions, habitId]
   );
 
-  // If the selected habit gets filtered away, reset the picker.
+  // Reset habit picker if it leaves the filtered set
   useEffect(() => {
     if (habitId && !habits.some((h) => h.id === habitId)) setHabitId('');
   }, [habits, habitId]);
-  // If the selected tag is no longer present in the current scope, clear it.
-  useEffect(() => {
-    if (tag && !tagOptions.some((t) => t.tag === tag)) setTag('');
-  }, [tagOptions, tag]);
 
-  // The habit set the spider is actually computed against
-  const set = tagFiltered;
+  // ── Overview: habits-as-axes frequency spider ──
+  const overviewData = useMemo(() => {
+    const counts = habits
+      .map((h) => ({
+        name: h.name,
+        v: dateFilter ? h.logs.filter((l) => l.date === dateFilter).length : h.logs.length,
+      }))
+      .filter((x) => x.v > 0)
+      .sort((a, b) => b.v - a.v)
+      .slice(0, 8);
+    if (counts.length < 3) return null;
+    return {
+      axes: counts.map((c) => c.name),
+      layers: [{ label: 'Taps', color: 'var(--accent)', values: counts.map((c) => c.v) }],
+    };
+  }, [habits, dateFilter]);
 
-  const data = useMemo(() => {
-    if (sub === 'freq') {
-      const counts = set
-        .map((h) => ({
-          name: h.name,
-          v: dateFilter
-            ? h.logs.filter((l) => l.date === dateFilter).length
-            : h.logs.length,
-        }))
-        .filter((x) => x.v > 0)
-        .sort((a, b) => b.v - a.v)
-        .slice(0, 8);
-      if (counts.length < 3) return null;
-      return {
-        axes: counts.map((c) => c.name),
-        layers: [{ label: 'Frequency', color: 'var(--accent)', values: counts.map((c) => c.v) }],
-      };
+  // ── Per-habit: same logic as TapScreen's buildSpiderData ──
+  const habitData = useMemo(() => {
+    if (!selectedHabit) return null;
+    const h = selectedHabit;
+    const df = dateFilter;
+
+    if (habitSub === 'tags') {
+      const tags = tagFrequencyForHabit(h).slice(0, 8);
+      if (tags.length < 3) return null;
+      return { axes: tags.map((t) => t.tag), layers: [{ label: 'Tag uses', color: 'var(--accent)', values: tags.map((t) => t.count) }] };
     }
-    if (sub === 'tags') {
-      // When a single habit is picked, this shows that habit's tag mix.
-      // Otherwise it shows the top tags across the (possibly tag-filtered) set.
-      const list = tagFrequency(set, dateFilter).slice(0, 8);
-      if (list.length < 3) return null;
-      return {
-        axes: list.map((t) => t.tag),
-        layers: [{ label: 'Tag uses', color: 'var(--accent)', values: list.map((t) => t.count) }],
-      };
+    if (habitSub === 'mood') {
+      const m = moodCounts([h], df);
+      const keys = ['good', 'meh', 'low', 'stressed', 'tired', 'fired up'].filter((k) => m.has(k));
+      if (keys.length < 3) return null;
+      return { axes: keys, layers: [{ label: 'Mood', color: 'var(--accent)', values: keys.map((k) => m.get(k) || 0) }] };
     }
-    if (sub === 'mood') {
-      const m = moodCounts(set, dateFilter);
-      const labels = ['good', 'meh', 'low', 'stressed', 'tired', 'fired up'].filter((k) => m.has(k));
-      if (labels.length < 3) return null;
-      return {
-        axes: labels,
-        layers: [{ label: 'Mood', color: 'var(--accent)', values: labels.map((k) => m.get(k) || 0) }],
-      };
+    if (habitSub === 'energy') {
+      const m = energyCounts([h], df);
+      const keys = ['high', 'medium', 'low energy'].filter((k) => m.has(k));
+      if (keys.length < 3) return null;
+      return { axes: keys, layers: [{ label: 'Energy', color: 'var(--accent)', values: keys.map((k) => m.get(k) || 0) }] };
     }
-    if (sub === 'energy') {
-      const m = energyCounts(set, dateFilter);
-      const labels = ['high', 'medium', 'low energy'].filter((k) => m.has(k));
-      if (labels.length < 3) return null;
-      return {
-        axes: labels,
-        layers: [{ label: 'Energy', color: 'var(--accent)', values: labels.map((k) => m.get(k) || 0) }],
-      };
-    }
-    if (sub === 'ease') {
-      const arr = easeAvgs(set, dateFilter).slice(0, 8);
-      if (arr.length < 3) return null;
-      return {
-        axes: arr.map((a) => a.habit.name),
-        layers: [{ label: 'Avg ease', color: 'var(--accent)', values: arr.map((a) => a.avg), max: 5 }],
-      };
-    }
-    if (sub === 'resist') {
-      const arr = set.filter((h) => h.type === 'st').map((h) => {
+    if (habitSub === 'ease') {
+      if (h.type === 'st') {
         const r = resistRate(h);
-        return r ? { name: h.name, v: r.rate * 5 } : null;
-      }).filter(Boolean);
-      if (arr.length < 3) return null;
-      return {
-        axes: arr.map((a) => a.name),
-        layers: [{ label: 'Resistance', color: 'var(--accent)', values: arr.map((a) => a.v), max: 5 }],
-      };
+        if (!r || (r.yes + r.no + r.partial) < 3) return null;
+        return { axes: ['Resisted', 'Gave in', 'Partial'], layers: [{ label: 'Resistance', color: 'var(--accent)', values: [r.yes, r.no, r.partial] }] };
+      } else {
+        const byTag = {};
+        for (const l of h.logs) {
+          if (!l.ease) continue;
+          for (const t of (l.tags || [])) {
+            byTag[t] = byTag[t] || [];
+            byTag[t].push(l.ease);
+          }
+        }
+        const entries = Object.entries(byTag)
+          .map(([tag, vals]) => ({ tag, avg: vals.reduce((s, v) => s + v, 0) / vals.length }))
+          .sort((a, b) => b.avg - a.avg).slice(0, 8);
+        if (entries.length < 3) return null;
+        return { axes: entries.map((e) => e.tag), layers: [{ label: 'Avg ease', color: 'var(--accent)', values: entries.map((e) => e.avg), max: 5 }] };
+      }
+    }
+    if (habitSub === 'co') {
+      const co = coOccurrenceFor(h, allHabits).slice(0, 8);
+      if (co.length < 3) return null;
+      return { axes: co.map((c) => c.habit.name), layers: [{ label: 'Co-logged', color: 'var(--accent)', values: co.map((c) => c.shared) }] };
     }
     return null;
-  }, [set, sub, dateFilter]);
+  }, [selectedHabit, habitSub, dateFilter, allHabits]);
 
-  // Available habit options for picker (only habits with at least one log).
-  const habitOptions = useMemo(
-    () => habits.filter((h) => h.logs.length > 0),
-    [habits]
-  );
+  const data = view === 'overview' ? overviewData : habitData;
 
   return (
     <div className="section">
       <h3><span className="title-text">Spider</span></h3>
-      <div className="subtabs">
-        {SUB.map((s) => (
-          <button key={s.id} className={sub === s.id ? 'on' : ''} onClick={() => setSub(s.id)}>
-            {s.label}
-          </button>
-        ))}
+
+      {/* Top-level view toggle */}
+      <div className="seg" style={{ marginBottom: 12, alignSelf: 'flex-start' }}>
+        <button className={view === 'overview' ? 'on' : ''} onClick={() => setView('overview')}>All habits</button>
+        <button className={view === 'habit' ? 'on' : ''} onClick={() => setView('habit')}>Per habit</button>
       </div>
-      <div className="spider-filters">
-        <label className="spider-filter">
-          <span>Habit</span>
-          <select value={habitId} onChange={(e) => setHabitId(e.target.value)}>
-            <option value="">All habits</option>
-            {habitOptions.map((h) => (
-              <option key={h.id} value={h.id}>{h.name}</option>
-            ))}
-          </select>
-        </label>
-        <label className="spider-filter">
-          <span>Tag</span>
-          <select value={tag} onChange={(e) => setTag(e.target.value)}>
-            <option value="">All tags</option>
-            {tagOptions.map((t) => (
-              <option key={t.tag} value={t.tag}>{t.tag} ({t.count})</option>
-            ))}
-          </select>
-        </label>
-      </div>
+
+      {/* Habit picker (per-habit mode only) */}
+      {view === 'habit' && (
+        <div className="spider-filters" style={{ marginBottom: 12 }}>
+          <label className="spider-filter" style={{ flex: '1 1 auto' }}>
+            <span>Habit</span>
+            <select
+              value={habitId}
+              onChange={(e) => setHabitId(e.target.value)}
+            >
+              <option value="">— pick a habit —</option>
+              {habitOptions.map((h) => (
+                <option key={h.id} value={h.id}>{h.name}</option>
+              ))}
+            </select>
+          </label>
+        </div>
+      )}
+
+      {/* Per-habit sub-mode tabs */}
+      {view === 'habit' && selectedHabit && (
+        <div className="subtabs" style={{ marginBottom: 16 }}>
+          {HABIT_SUBS.map((m) => (
+            <button key={m.id} className={habitSub === m.id ? 'on' : ''} onClick={() => setHabitSub(m.id)}>
+              {typeof m.label === 'function' ? m.label(selectedHabit) : m.label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Chart or placeholder */}
       {data ? (
         <Spider axes={data.axes} layers={data.layers} />
       ) : (
-        <div className="muted" style={{ fontSize: 12 }}>Need at least 3 data points for this view.</div>
+        <AnalyticsSpiderPlaceholder
+          view={view}
+          habitSub={habitSub}
+          selectedHabit={selectedHabit}
+          hasHabits={habitOptions.length > 0}
+        />
       )}
+    </div>
+  );
+}
+
+function AnalyticsSpiderPlaceholder({ view, habitSub, selectedHabit, hasHabits }) {
+  let msg;
+  if (view === 'overview') {
+    msg = hasHabits
+      ? 'Log at least 3 different habits to see how they relate to each other.'
+      : 'Add habits and start logging to see a frequency overview here.';
+  } else if (!selectedHabit) {
+    msg = 'Pick a habit above to drill into its patterns.';
+  } else {
+    const hints = {
+      tags:   'Log with tags to see the tag pattern for this habit.',
+      mood:   'Log with mood tracked to see mood breakdown.',
+      energy: 'Log with energy tracked to see energy breakdown.',
+      ease:   selectedHabit?.type === 'st'
+                ? 'Log stop-habit outcomes to see resistance breakdown.'
+                : 'Log with ease ratings + tags to see ease-by-tag.',
+      co:     'Log alongside other habits to see co-occurrence.',
+    };
+    msg = hints[habitSub] || 'Log more data to see this chart.';
+  }
+
+  const N = 5, cx = 100, cy = 90, R = 70;
+  const angle = (i) => -Math.PI / 2 + (i * 2 * Math.PI) / N;
+  const pt = (i, r) => [cx + r * Math.cos(angle(i)), cy + r * Math.sin(angle(i))];
+  const ghost = [0.55, 0.38, 0.62, 0.32, 0.50];
+
+  return (
+    <div className="spider-placeholder">
+      <svg viewBox="0 0 200 180" aria-hidden="true">
+        {Array.from({ length: N }, (_, i) => (
+          <line key={`ax${i}`} x1={cx} y1={cy} x2={pt(i, R)[0]} y2={pt(i, R)[1]}
+            stroke="currentColor" strokeOpacity="0.14" strokeWidth="1" />
+        ))}
+        {[0.25, 0.5, 0.75, 1].map((f) => (
+          <polygon key={f}
+            points={Array.from({ length: N }, (_, i) => pt(i, R * f).join(',')).join(' ')}
+            fill="none" stroke="currentColor" strokeOpacity="0.10" strokeWidth="1" />
+        ))}
+        <polygon
+          points={ghost.map((f, i) => pt(i, R * f).join(',')).join(' ')}
+          fill="currentColor" fillOpacity="0.07"
+          stroke="currentColor" strokeOpacity="0.20" strokeWidth="1.5" strokeDasharray="4 3"
+        />
+      </svg>
+      <p>{msg}</p>
     </div>
   );
 }

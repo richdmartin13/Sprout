@@ -94,7 +94,7 @@ body::after {
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
-  padding-bottom: calc(96px + env(safe-area-inset-bottom));
+  padding-bottom: 100px;
 }
 .screen::-webkit-scrollbar { width: 0; display: none; }
 
@@ -165,34 +165,46 @@ body::after {
 .iconbtn svg { width: 19px; height: 19px; }
 .iconbtn.ghost { background: transparent; border: none; }
 
-/* ─── Bottom nav (iOS 26 Liquid Glass — floating capsule) ─── */
-.bnav {
+/* ─── Bottom nav row (iOS 26 Photos-style) ─── */
+/* The row spans the full width so nav can sit left and FAB right */
+.bnav-row {
   position: fixed;
+  bottom: 28px;
   left: 50%;
-  bottom: calc(14px + env(safe-area-inset-bottom));
   transform: translateX(-50%);
+  width: min(calc(100vw - 32px), 500px);
   display: flex;
   align-items: center;
-  gap: 2px;
-  padding: 6px;
-  border-radius: 999px;
-  /* Translucent glass tint — heavier saturation for the iOS 26 look */
-  background: var(--glass-nav-bg);
-  border: 1px solid var(--glass-nav-border);
+  justify-content: center;   /* centered when no FAB */
+  gap: 12px;
+  z-index: 50;
+  pointer-events: none;      /* children re-enable */
+}
+.bnav-row.with-fab {
+  justify-content: space-between;
+}
+
+/* Glass capsule shared styles */
+.bnav,
+.fab-pill {
+  pointer-events: all;
   backdrop-filter: blur(40px) saturate(220%);
   -webkit-backdrop-filter: blur(40px) saturate(220%);
-  /* Outer drop shadow + subtle inner highlight via box-shadow */
+  background: var(--glass-nav-bg);
+  border: 1px solid var(--glass-nav-border);
+  border-radius: 999px;
   box-shadow:
     0 1px 0 var(--glass-nav-inner-top) inset,
     0 -1px 0 var(--glass-nav-inner-bottom) inset,
-    0 10px 30px rgba(0, 0, 0, 0.32),
-    0 2px 8px rgba(0, 0, 0, 0.18);
-  z-index: 50;
+    0 10px 30px rgba(0, 0, 0, 0.28),
+    0 2px 8px rgba(0, 0, 0, 0.16);
+  position: relative;
   isolation: isolate;
   overflow: hidden;
 }
-/* Specular highlight pass on the capsule itself */
-.bnav::before {
+/* Shared specular sheen */
+.bnav::before,
+.fab-pill::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -206,6 +218,14 @@ body::after {
   );
   mix-blend-mode: overlay;
   z-index: 0;
+}
+
+/* Nav pill */
+.bnav {
+  display: flex;
+  align-items: center;
+  padding: 6px;
+  gap: 2px;
 }
 .bnav button {
   position: relative;
@@ -231,9 +251,7 @@ body::after {
     transform 200ms cubic-bezier(0.32, 0.72, 0, 1);
   -webkit-tap-highlight-color: transparent;
 }
-.bnav button:active {
-  transform: scale(0.94);
-}
+.bnav button:active { transform: scale(0.94); }
 .bnav button.on {
   color: var(--accent);
   background: var(--glass-nav-active-bg);
@@ -242,12 +260,8 @@ body::after {
     0 -1px 0 rgba(255, 255, 255, 0.05) inset,
     0 2px 10px var(--accent-glow);
 }
-.bnav button svg {
-  width: 20px;
-  height: 20px;
-  flex-shrink: 0;
-}
-/* Labels hidden by default — only the active tab shows its label, iOS 26 style */
+.bnav button svg { width: 20px; height: 20px; flex-shrink: 0; }
+/* Labels: hidden by default, expand for active tab */
 .bnav button span {
   max-width: 0;
   overflow: hidden;
@@ -259,39 +273,51 @@ body::after {
     opacity 220ms cubic-bezier(0.32, 0.72, 0, 1),
     transform 280ms cubic-bezier(0.32, 0.72, 0, 1);
 }
-.bnav button.on span {
-  max-width: 120px;
-  opacity: 1;
-  transform: translateX(0);
-}
-/* Compact safety for tiny screens */
-@media (max-width: 360px) {
-  .bnav button { padding: 0 12px; gap: 5px; }
-  .bnav button.on { padding: 0 14px; }
-}
+.bnav button.on span { max-width: 120px; opacity: 1; transform: translateX(0); }
 
-/* ─── FAB ─── */
-.fab {
-  position: fixed;
-  bottom: calc(78px + env(safe-area-inset-bottom));
-  right: 18px;
+/* FAB pill */
+.fab-pill {
   width: 56px;
   height: 56px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--grad-1), var(--grad-2) 50%, var(--grad-3));
-  color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
+  background: linear-gradient(
+    135deg,
+    var(--grad-1),
+    var(--grad-2) 50%,
+    var(--grad-3)
+  );
+  border: none;
+  /* Override glass border with accent-tinted one */
+  border: 1px solid var(--accent-border);
   box-shadow:
-    0 8px 32px var(--accent-glow),
-    inset 0 1px 0 rgba(255,255,255,0.30),
-    inset 0 -2px 8px rgba(0,0,0,0.15);
-  z-index: 40;
-  transition: transform 0.16s ease, box-shadow 0.16s ease;
+    0 1px 0 rgba(255, 255, 255, 0.30) inset,
+    0 -2px 8px rgba(0, 0, 0, 0.15) inset,
+    0 8px 28px var(--accent-glow),
+    0 4px 12px rgba(0, 0, 0, 0.22);
+  color: #fff;
+  transition: transform 180ms cubic-bezier(0.32, 0.72, 0, 1),
+              box-shadow 180ms ease;
+  -webkit-tap-highlight-color: transparent;
 }
-.fab:active { transform: scale(0.92); }
-.fab svg { width: 26px; height: 26px; }
+.fab-pill:active {
+  transform: scale(0.91);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.30) inset,
+    0 -2px 8px rgba(0, 0, 0, 0.15) inset,
+    0 4px 14px var(--accent-glow),
+    0 2px 6px rgba(0, 0, 0, 0.22);
+}
+.fab-pill svg { width: 24px; height: 24px; position: relative; z-index: 1; }
+
+/* Compact screens */
+@media (max-width: 380px) {
+  .bnav button { padding: 0 12px; gap: 5px; }
+  .bnav button.on { padding: 0 14px; }
+  .bnav-row { width: calc(100vw - 24px); }
+}
 
 /* ─── Filter strip ─── */
 .filters {
@@ -1118,6 +1144,41 @@ body::after {
   from { opacity: 0; transform: translateY(-3px); }
   to { opacity: 1; transform: translateY(0); }
 }
+/* Changelog */
+.changelog-build {
+  padding: 14px 16px;
+  border-top: 1px solid var(--border);
+}
+.changelog-build:first-child { border-top: none; }
+.changelog-version {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--accent);
+  margin-bottom: 8px;
+  font-variant-numeric: tabular-nums;
+}
+.changelog-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.changelog-list li {
+  font-size: 12.5px;
+  color: var(--text-2);
+  line-height: 1.45;
+  padding-left: 14px;
+  position: relative;
+}
+.changelog-list li::before {
+  content: '·';
+  position: absolute;
+  left: 3px;
+  color: var(--muted);
+}
 .settings-row {
   display: flex;
   align-items: center;
@@ -1335,6 +1396,28 @@ body::after {
   outline: none;
   border-color: var(--accent-border);
   box-shadow: 0 0 0 3px var(--accent-dim);
+}
+
+/* Spider placeholder — ghost radar shown when data is insufficient */
+.spider-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0 4px;
+  color: var(--muted);
+}
+.spider-placeholder svg {
+  width: 160px;
+  height: 144px;
+  opacity: 0.6;
+}
+.spider-placeholder p {
+  font-size: 12px;
+  text-align: center;
+  max-width: 240px;
+  line-height: 1.5;
+  color: var(--muted);
 }
 
 /* Bars */

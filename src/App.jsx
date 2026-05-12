@@ -200,7 +200,13 @@ export default function App() {
       <Splash hidden={splashHidden} />
       <div className="app">
         {screen}
-        {tab !== 'tap' && <BottomNav tab={tab} onChange={goTab} />}
+        {tab !== 'tap' && (
+          <BottomNav
+            tab={tab}
+            onChange={goTab}
+            onFab={tab === 'home' ? () => setSheet({ kind: 'habit', habit: null }) : undefined}
+          />
+        )}
       </div>
 
       {/* Sheets */}

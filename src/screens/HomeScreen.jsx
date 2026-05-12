@@ -69,9 +69,7 @@ export default function HomeScreen({ habits, prefs, setPrefs, onOpenHabit, onLon
         </div>
       )}
 
-      <button className="fab" onClick={onNewHabit} aria-label="New habit">
-        <Plus strokeWidth={2.8} />
-      </button>
+      <button className="fab" onClick={onNewHabit} aria-label="New habit" style={{display:'none'}} />
     </div>
   );
 }
