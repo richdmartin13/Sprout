@@ -4,7 +4,7 @@ export const STORAGE_KEY = 'sprout_v1';
 
 export const DEF_PREFS = {
   dark: true,
-  scheme: 'indigo',
+  scheme: 'sprout',
   viewMode: 'list',
   showStreak: true,
   compact: false,

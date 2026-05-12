@@ -109,7 +109,7 @@ export default function AnalyticsScreen({ habits, prefs, onEditLog, onDeleteLogR
         </div>
       )}
 
-      <div className="habit-list" style={{ paddingBottom: 24 }}>
+      <div className="analytics-content">
         {/* Quick summary */}
         {scopedLogsCount > 0 && (
           <div className="section">

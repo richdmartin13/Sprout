@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sprout — Icon & Logo Set</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Playfair+Display:wght@500;700&display=swap');
+
+  :root {
+    --green: #1a4a2e;
+    --green-mid: #2d6e47;
+    --green-light: #3d8f5f;
+    --cream: #f4f0e8;
+    --cream-dark: #e8e2d4;
+    --ink: #0e2a1a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--cream);
+    color: var(--green);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    padding: 60px 40px;
+  }
+
+  .page-header {
+    margin-bottom: 72px;
+  }
+
+  .page-header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--green-mid);
+    margin-bottom: 8px;
+  }
+
+  .page-header h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 48px;
+    font-weight: 700;
+    color: var(--green);
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+
+  .page-header .sub {
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    color: var(--green-mid);
+    margin-top: 12px;
+    opacity: 0.7;
+  }
+
+  .divider {
+    height: 1px;
+    background: var(--green);
+    opacity: 0.12;
+    margin: 56px 0;
+  }
+
+  .section-label {
+    font-size: 10px;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--green-mid);
+    opacity: 0.6;
+    margin-bottom: 32px;
+  }
+
+  /* ── APP ICONS ─────────────────────────────────── */
+  .icon-grid {
+    display: flex;
+    gap: 32px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    margin-bottom: 16px;
+  }
+
+  .icon-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .icon-item span {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: var(--green-mid);
+    opacity: 0.55;
+  }
+
+  /* App icon containers with rounded corners */
+  .app-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--green);
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .app-icon.r-ios { border-radius: 22.37%; }
+  .app-icon.r-android { border-radius: 50%; }
+  .app-icon.r-square { border-radius: 0; }
+
+  .app-icon svg { display: block; }
+
+  /* Favicon grid */
+  .favicon-grid {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    margin-bottom: 16px;
+  }
+
+  .fav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .fav-item span {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: var(--green-mid);
+    opacity: 0.55;
+  }
+
+  .favicon-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--green);
+    flex-shrink: 0;
+  }
+
+  /* Logo row */
+  .logo-row {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+
+  .logo-variant {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .logo-variant .variant-label {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    opacity: 0.45;
+  }
+
+  .logo-lockup {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .logo-lockup.stacked {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .logo-wordmark {
+    font-family: 'Playfair Display', serif;
+    font-size: 38px;
+    font-weight: 700;
+    color: var(--green);
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+
+  .logo-tagline {
+    font-size: 10px;
+    letter-spacing: 0.26em;
+    text-transform: uppercase;
+    color: var(--green-mid);
+    opacity: 0.55;
+  }
+
+  /* Dark swatch */
+  .on-dark {
+    background: var(--green);
+    padding: 32px 40px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .on-dark .logo-wordmark {
+    color: var(--cream);
+  }
+
+  .on-dark .logo-tagline {
+    color: var(--cream);
+    opacity: 0.45;
+  }
+
+  /* Download hint */
+  .download-note {
+    margin-top: 64px;
+    padding: 20px 24px;
+    border: 1px solid var(--green);
+    border-opacity: 0.15;
+    border-radius: 2px;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    color: var(--green-mid);
+    opacity: 0.6;
+    line-height: 1.7;
+  }
+
+  .cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 64px;
+  }
+
+  @media (max-width: 700px) {
+    .cols { grid-template-columns: 1fr; gap: 40px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>Brand Asset System</h1>
+  <h2>Sprout</h2>
+  <p class="sub">App Icons · Favicons · Monochrome Logos · Forest Green / Monochrome</p>
+</div>
+
+<!-- ══════════════════════════════════════════
+     APP ICONS
+══════════════════════════════════════════ -->
+<p class="section-label">01 — App Icons (iOS / Android / Store)</p>
+<div class="icon-grid">
+
+  <!-- 1024px equivalent (rendered at 160px) -->
+  <div class="icon-item">
+    <div class="app-icon r-ios" style="width:160px;height:160px;">
+      <svg width="160" height="160" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Subtle radial depth -->
+        <radialGradient id="rg1" cx="42%" cy="35%" r="65%">
+          <stop offset="0%" stop-color="#2d6e47" stop-opacity="0.35"/>
+          <stop offset="100%" stop-color="#0e2a1a" stop-opacity="0"/>
+        </radialGradient>
+        <rect width="160" height="160" fill="url(#rg1)"/>
+
+        <!-- Sprout mark: two bold rounded leaves + clean stem -->
+        <!-- Stem -->
+        <rect x="77" y="96" width="6" height="34" rx="3" fill="#f4f0e8" opacity="0.92"/>
+        <!-- Left leaf -->
+        <path d="M80 95 C60 85 44 62 52 40 C60 18 80 30 80 52 Z" fill="#f4f0e8" opacity="0.92"/>
+        <!-- Right leaf -->
+        <path d="M80 95 C100 82 116 58 106 38 C96 18 80 32 80 54 Z" fill="#f4f0e8" opacity="0.72"/>
+
+        <!-- Tap ring — concentric circle pulse -->
+        <circle cx="80" cy="122" r="20" stroke="#f4f0e8" stroke-width="1.2" opacity="0.18"/>
+        <circle cx="80" cy="122" r="28" stroke="#f4f0e8" stroke-width="0.7" opacity="0.09"/>
+      </svg>
+    </div>
+    <span>1024 × 1024</span>
+  </div>
+
+  <!-- 512 -->
+  <div class="icon-item">
+    <div class="app-icon r-ios" style="width:120px;height:120px;">
+      <svg width="120" height="120" viewBox="0 0 160 160" fill="none">
+        <rect x="77" y="96" width="6" height="34" rx="3" fill="#f4f0e8" opacity="0.92"/>
+        <path d="M80 95 C60 85 44 62 52 40 C60 18 80 30 80 52 Z" fill="#f4f0e8" opacity="0.92"/>
+        <path d="M80 95 C100 82 116 58 106 38 C96 18 80 32 80 54 Z" fill="#f4f0e8" opacity="0.72"/>
+        <circle cx="80" cy="122" r="20" stroke="#f4f0e8" stroke-width="1.2" opacity="0.18"/>
+        <circle cx="80" cy="122" r="28" stroke="#f4f0e8" stroke-width="0.7" opacity="0.09"/>
+      </svg>
+    </div>
+    <span>512 × 512</span>
+  </div>
+
+  <!-- 256 -->
+  <div class="icon-item">
+    <div class="app-icon r-ios" style="width:80px;height:80px;">
+      <svg width="80" height="80" viewBox="0 0 160 160" fill="none">
+        <rect x="77" y="96" width="6" height="34" rx="3" fill="#f4f0e8" opacity="0.92"/>
+        <path d="M80 95 C60 85 44 62 52 40 C60 18 80 30 80 52 Z" fill="#f4f0e8" opacity="0.92"/>
+        <path d="M80 95 C100 82 116 58 106 38 C96 18 80 32 80 54 Z" fill="#f4f0e8" opacity="0.72"/>
+        <circle cx="80" cy="122" r="20" stroke="#f4f0e8" stroke-width="1.6" opacity="0.2"/>
+      </svg>
+    </div>
+    <span>180 × 180</span>
+  </div>
+
+  <!-- 60x60 -->
+  <div class="icon-item">
+    <div class="app-icon r-ios" style="width:56px;height:56px;">
+      <svg width="56" height="56" viewBox="0 0 160 160" fill="none">
+        <rect x="77" y="96" width="6" height="34" rx="3" fill="#f4f0e8" opacity="0.92"/>
+        <path d="M80 95 C60 85 44 62 52 40 C60 18 80 30 80 52 Z" fill="#f4f0e8" opacity="0.92"/>
+        <path d="M80 95 C100 82 116 58 106 38 C96 18 80 32 80 54 Z" fill="#f4f0e8" opacity="0.72"/>
+      </svg>
+    </div>
+    <span>60 × 60</span>
+  </div>
+
+  <!-- 29x29 -->
+  <div class="icon-item">
+    <div class="app-icon r-ios" style="width:36px;height:36px;">
+      <svg width="36" height="36" viewBox="0 0 160 160" fill="none">
+        <rect x="77" y="96" width="6" height="34" rx="3" fill="#f4f0e8" opacity="0.92"/>
+        <path d="M80 95 C60 85 44 62 52 40 C60 18 80 30 80 52 Z" fill="#f4f0e8" opacity="0.92"/>
+        <path d="M80 95 C100 82 116 58 106 38 C96 18 80 32 80 54 Z" fill="#f4f0e8" opacity="0.72"/>
+      </svg>
+    </div>
+    <span>29 × 29</span>
+  </div>
+
+  <!-- Android circle -->
+  <div class="icon-item">
+    <div class="app-icon r-android" style="width:96px;height:96px;">
+      <svg width="96" height="96" viewBox="0 0 160 160" fill="none">
+        <rect x="77" y="96" width="6" height="34" rx="3" fill="#f4f0e8" opacity="0.92"/>
+        <path d="M80 95 C60 85 44 62 52 40 C60 18 80 30 80 52 Z" fill="#f4f0e8" opacity="0.92"/>
+        <path d="M80 95 C100 82 116 58 106 38 C96 18 80 32 80 54 Z" fill="#f4f0e8" opacity="0.72"/>
+        <circle cx="80" cy="122" r="20" stroke="#f4f0e8" stroke-width="1.4" opacity="0.2"/>
+        <circle cx="80" cy="122" r="28" stroke="#f4f0e8" stroke-width="0.8" opacity="0.1"/>
+      </svg>
+    </div>
+    <span>Android</span>
+  </div>
+
+</div>
+
+<div class="divider"></div>
+
+<!-- ══════════════════════════════════════════
+     FAVICONS
+══════════════════════════════════════════ -->
+<p class="section-label">02 — Web Favicons</p>
+<div class="favicon-grid">
+
+  <!-- 256x256 -->
+  <div class="fav-item">
+    <div class="favicon-box" style="width:80px;height:80px;border-radius:4px;">
+      <svg width="80" height="80" viewBox="0 0 32 32" fill="none">
+        <rect width="32" height="32" fill="#1a4a2e"/>
+        <rect x="14.6" y="19.5" width="2.8" height="8.5" rx="1.4" fill="#f4f0e8" opacity="0.92"/>
+        <path d="M16 19 C10 16 7 9 10.5 4 C13 0 16 4 16 10 Z" fill="#f4f0e8" opacity="0.92"/>
+        <path d="M16 19 C22 16 25 9 21.5 4 C19 0 16 4 16 10 Z" fill="#f4f0e8" opacity="0.70"/>
+      </svg>
+    </div>
+    <span>256px</span>
+  </div>
+
+  <!-- 128x128 -->
+  <div class="fav-item">
+    <div class="favicon-box" style="width:56px;height:56px;border-radius:3px;">
+      <svg width="56" height="56" viewBox="0 0 32 32" fill="none">
+        <rect width="32" height="32" fill="#1a4a2e"/>
+        <rect x="14.6" y="19.5" width="2.8" height="8.5" rx="1.4" fill="#f4f0e8" opacity="0.92"/>
+        <path d="M16 19 C10 16 7 9 10.5 4 C13 0 16 4 16 10 Z" fill="#f4f0e8" opacity="0.92"/>
+        <path d="M16 19 C22 16 25 9 21.5 4 C19 0 16 4 16 10 Z" fill="#f4f0e8" opacity="0.70"/>
+      </svg>
+    </div>
+    <span>128px</span>
+  </div>
+
+  <!-- 64x64 -->
+  <div class="fav-item">
+    <div class="favicon-box" style="width:40px;height:40px;border-radius:2px;">
+      <svg width="40" height="40" viewBox="0 0 32 32" fill="none">
+        <rect width="32" height="32" fill="#1a4a2e"/>
+        <rect x="14.6" y="19.5" width="2.8" height="8.5" rx="1.4" fill="#f4f0e8" opacity="0.92"/>
+        <path d="M16 19 C10 16 7 9 10.5 4 C13 0 16 4 16 10 Z" fill="#f4f0e8" opacity="0.92"/>
+        <path d="M16 19 C22 16 25 9 21.5 4 C19 0 16 4 16 10 Z" fill="#f4f0e8" opacity="0.70"/>
+      </svg>
+    </div>
+    <span>64px</span>
+  </div>
+
+  <!-- 32x32 -->
+  <div class="fav-item">
+    <div class="favicon-box" style="width:32px;height:32px;border-radius:2px;">
+      <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+        <rect width="32" height="32" fill="#1a4a2e"/>
+        <rect x="14.6" y="19.5" width="2.8" height="8.5" rx="1.4" fill="#f4f0e8" opacity="0.92"/>
+        <path d="M16 19 C10 16 7 9 10.5 4 C13 0 16 4 16 10 Z" fill="#f4f0e8" opacity="0.92"/>
+        <path d="M16 19 C22 16 25 9 21.5 4 C19 0 16 4 16 10 Z" fill="#f4f0e8" opacity="0.70"/>
+      </svg>
+    </div>
+    <span>32px</span>
+  </div>
+
+  <!-- 16x16 -->
+  <div class="fav-item">
+    <div class="favicon-box" style="width:16px;height:16px;border-radius:1px;">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <rect width="16" height="16" fill="#1a4a2e"/>
+        <rect x="7" y="9.5" width="2" height="4.5" rx="1" fill="#f4f0e8"/>
+        <path d="M8 9.5 C5 8 3.5 4.5 5.5 2 C7 0 8 2.5 8 5 Z" fill="#f4f0e8" opacity="0.92"/>
+        <path d="M8 9.5 C11 8 12.5 4.5 10.5 2 C9 0 8 2.5 8 5 Z" fill="#f4f0e8" opacity="0.70"/>
+      </svg>
+    </div>
+    <span>16px</span>
+  </div>
+
+  <!-- Apple Touch Icon (180x180) -->
+  <div class="fav-item">
+    <div class="favicon-box" style="width:60px;height:60px;border-radius:13.4px;">
+      <svg width="60" height="60" viewBox="0 0 32 32" fill="none">
+        <rect width="32" height="32" fill="#1a4a2e"/>
+        <rect x="14.6" y="19.5" width="2.8" height="8.5" rx="1.4" fill="#f4f0e8" opacity="0.92"/>
+        <path d="M16 19 C10 16 7 9 10.5 4 C13 0 16 4 16 10 Z" fill="#f4f0e8" opacity="0.92"/>
+        <path d="M16 19 C22 16 25 9 21.5 4 C19 0 16 4 16 10 Z" fill="#f4f0e8" opacity="0.70"/>
+        <circle cx="16" cy="26" r="5" stroke="#f4f0e8" stroke-width="0.7" opacity="0.2"/>
+      </svg>
+    </div>
+    <span>Apple Touch</span>
+  </div>
+
+  <!-- OG / Social 512 circle -->
+  <div class="fav-item">
+    <div class="favicon-box" style="width:60px;height:60px;border-radius:50%;">
+      <svg width="60" height="60" viewBox="0 0 32 32" fill="none">
+        <rect width="32" height="32" fill="#1a4a2e"/>
+        <rect x="14.6" y="19.5" width="2.8" height="8.5" rx="1.4" fill="#f4f0e8" opacity="0.92"/>
+        <path d="M16 19 C10 16 7 9 10.5 4 C13 0 16 4 16 10 Z" fill="#f4f0e8" opacity="0.92"/>
+        <path d="M16 19 C22 16 25 9 21.5 4 C19 0 16 4 16 10 Z" fill="#f4f0e8" opacity="0.70"/>
+        <circle cx="16" cy="26" r="5" stroke="#f4f0e8" stroke-width="0.7" opacity="0.22"/>
+      </svg>
+    </div>
+    <span>Social / OG</span>
+  </div>
+
+</div>
+
+<div class="divider"></div>
+
+<!-- ══════════════════════════════════════════
+     MONOCHROME LOGOS
+══════════════════════════════════════════ -->
+<p class="section-label">03 — Monochrome Logo Set</p>
+
+<div class="logo-row">
+
+  <!-- Horizontal lockup — green on cream -->
+  <div class="logo-variant">
+    <span class="variant-label">Horizontal — Light</span>
+    <div class="logo-lockup">
+      <svg width="48" height="48" viewBox="0 0 160 160" fill="none">
+        <rect x="77" y="96" width="6" height="34" rx="3" fill="#1a4a2e" opacity="0.92"/>
+        <path d="M80 95 C60 85 44 62 52 40 C60 18 80 30 80 52 Z" fill="#1a4a2e" opacity="0.92"/>
+        <path d="M80 95 C100 82 116 58 106 38 C96 18 80 32 80 54 Z" fill="#1a4a2e" opacity="0.55"/>
+        <circle cx="80" cy="122" r="20" stroke="#1a4a2e" stroke-width="2.5" opacity="0.14"/>
+        <circle cx="80" cy="122" r="30" stroke="#1a4a2e" stroke-width="1.2" opacity="0.06"/>
+      </svg>
+      <div>
+        <div class="logo-wordmark">sprout</div>
+        <div class="logo-tagline">Build better habits</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Horizontal — dark bg -->
+  <div class="logo-variant">
+    <span class="variant-label">Horizontal — Dark</span>
+    <div class="on-dark">
+      <svg width="48" height="48" viewBox="0 0 160 160" fill="none">
+        <rect x="77" y="96" width="6" height="34" rx="3" fill="#f4f0e8" opacity="0.92"/>
+        <path d="M80 95 C60 85 44 62 52 40 C60 18 80 30 80 52 Z" fill="#f4f0e8" opacity="0.92"/>
+        <path d="M80 95 C100 82 116 58 106 38 C96 18 80 32 80 54 Z" fill="#f4f0e8" opacity="0.55"/>
+        <circle cx="80" cy="122" r="20" stroke="#f4f0e8" stroke-width="2.5" opacity="0.18"/>
+        <circle cx="80" cy="122" r="30" stroke="#f4f0e8" stroke-width="1.2" opacity="0.08"/>
+      </svg>
+      <div>
+        <div class="logo-wordmark">sprout</div>
+        <div class="logo-tagline">Build better habits</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Symbol only, three sizes -->
+  <div class="logo-variant">
+    <span class="variant-label">Symbol Only</span>
+    <div style="display:flex;gap:28px;align-items:flex-end;">
+
+      <div class="icon-item">
+        <svg width="96" height="96" viewBox="0 0 160 160" fill="none">
+          <rect x="77" y="96" width="6" height="34" rx="3" fill="#1a4a2e" opacity="0.92"/>
+          <path d="M80 95 C60 85 44 62 52 40 C60 18 80 30 80 52 Z" fill="#1a4a2e" opacity="0.92"/>
+          <path d="M80 95 C100 82 116 58 106 38 C96 18 80 32 80 54 Z" fill="#1a4a2e" opacity="0.55"/>
+          <circle cx="80" cy="122" r="20" stroke="#1a4a2e" stroke-width="2.5" opacity="0.16"/>
+          <circle cx="80" cy="122" r="30" stroke="#1a4a2e" stroke-width="1.2" opacity="0.07"/>
+        </svg>
+        <span>Large</span>
+      </div>
+
+      <div class="icon-item">
+        <svg width="56" height="56" viewBox="0 0 160 160" fill="none">
+          <rect x="77" y="96" width="6" height="34" rx="3" fill="#1a4a2e" opacity="0.92"/>
+          <path d="M80 95 C60 85 44 62 52 40 C60 18 80 30 80 52 Z" fill="#1a4a2e" opacity="0.92"/>
+          <path d="M80 95 C100 82 116 58 106 38 C96 18 80 32 80 54 Z" fill="#1a4a2e" opacity="0.55"/>
+          <circle cx="80" cy="122" r="20" stroke="#1a4a2e" stroke-width="2.5" opacity="0.18"/>
+        </svg>
+        <span>Medium</span>
+      </div>
+
+      <div class="icon-item">
+        <svg width="32" height="32" viewBox="0 0 160 160" fill="none">
+          <rect x="77" y="96" width="6" height="34" rx="3" fill="#1a4a2e" opacity="0.92"/>
+          <path d="M80 95 C60 85 44 62 52 40 C60 18 80 30 80 52 Z" fill="#1a4a2e" opacity="0.92"/>
+          <path d="M80 95 C100 82 116 58 106 38 C96 18 80 32 80 54 Z" fill="#1a4a2e" opacity="0.55"/>
+        </svg>
+        <span>Small</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Wordmark only -->
+  <div class="logo-variant">
+    <span class="variant-label">Wordmark Only</span>
+    <div class="logo-wordmark" style="font-size:52px;">sprout</div>
+  </div>
+
+</div>
+
+<div class="divider"></div>
+
+<!-- ══════════════════════════════════════════
+     DESIGN NOTES
+══════════════════════════════════════════ -->
+<p class="section-label">04 — Design System Notes</p>
+<div class="cols">
+  <div>
+    <p style="font-size:11px;line-height:2;opacity:0.7;">
+      <strong style="opacity:1;letter-spacing:0.1em;">MARK CONCEPT</strong><br>
+      Two asymmetric leaves emerge from a shared stem — one slightly recessed to suggest depth without gradient. Concentric rings below the stem evoke a haptic tap pulse, grounding the growth metaphor in interaction.<br><br>
+      <strong style="opacity:1;letter-spacing:0.1em;">COLOR</strong><br>
+      Forest Green #1A4A2E · Off-White #F4F0E8<br>
+      Single ink value. No mid-tones. The off-white fill on dark green preserves warmth at small sizes.<br><br>
+      <strong style="opacity:1;letter-spacing:0.1em;">TYPEFACE</strong><br>
+      Playfair Display — the serif weight adds authority while remaining approachable. Mono captions keep system language grounded.
+    </p>
+  </div>
+  <div>
+    <p style="font-size:11px;line-height:2;opacity:0.7;">
+      <strong style="opacity:1;letter-spacing:0.1em;">USAGE RULES</strong><br>
+      — Never recolor the mark mid-green or teal<br>
+      — Minimum app icon: 29 × 29 px<br>
+      — Minimum standalone mark: 24 × 24 px<br>
+      — Minimum clearspace: ½ mark height<br>
+      — Dark background: use cream (#F4F0E8) fill<br>
+      — Light background: use forest green (#1A4A2E) fill<br><br>
+      <strong style="opacity:1;letter-spacing:0.1em;">HAPTIC RING USAGE</strong><br>
+      The tap-pulse rings appear only at 96px and above. At smaller sizes, drop them to preserve clarity of the core sprout mark.
+    </p>
+  </div>
+</div>
+
+</body>
+</html>

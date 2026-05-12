@@ -1,41 +1,59 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect, useRef } from 'react';
 import { todayStr, dateStr, parseDate, fmtDate } from '../lib/util.js';
 import { heatColor } from '../lib/theme.js';
 
 export default function Heatmap({ habits, prefs, onDateClick, weeks = 26 }) {
   const data = useMemo(() => buildGrid(habits, weeks), [habits, weeks]);
+  const wrapRef = useRef(null);
+  const todayRef = useRef(null);
+
+  // Scroll to today's column on mount and when habits change
+  useEffect(() => {
+    if (wrapRef.current && todayRef.current) {
+      const wrapper = wrapRef.current;
+      const todayEl = todayRef.current;
+      // Scroll so today is near the right edge with a small margin
+      const scrollLeft = todayEl.offsetLeft - wrapper.clientWidth + todayEl.offsetWidth + 20;
+      wrapper.scrollLeft = Math.max(0, scrollLeft);
+    }
+  }, [habits]);
 
   return (
-    <div className="heatmap">
-      {data.cols.map((col, ci) => (
-        <div key={ci} className="col">
-          {col.map((cell, ri) => (
-            <button
-              key={ri}
-              className={`cell ${cell.today ? 'today' : ''} ${cell.future ? 'future' : ''}`}
-              style={{
-                background: cell.count > 0 ? heatColor(cell.count, data.max, prefs) : undefined,
-              }}
-              title={`${cell.count} taps · ${fmtDate(cell.date)}`}
-              onClick={() => cell.count > 0 && !cell.future && onDateClick && onDateClick(cell.date)}
-              aria-label={`${cell.count} taps on ${fmtDate(cell.date)}`}
-            />
-          ))}
-        </div>
-      ))}
+    <div className="heatmap-scroll-wrapper" ref={wrapRef}>
+      <div className="heatmap">
+        {data.cols.map((col, ci) => {
+          const hasToday = col.some((cell) => cell.today);
+          return (
+            <div
+              key={ci}
+              className="col"
+              ref={hasToday ? todayRef : undefined}
+            >
+              {col.map((cell, ri) => (
+                <button
+                  key={ri}
+                  className={`cell ${cell.today ? 'today' : ''} ${cell.future ? 'future' : ''}`}
+                  style={{
+                    background: cell.count > 0 ? heatColor(cell.count, data.max, prefs) : undefined,
+                  }}
+                  title={`${cell.count} taps · ${fmtDate(cell.date)}`}
+                  onClick={() => cell.count > 0 && !cell.future && onDateClick && onDateClick(cell.date)}
+                  aria-label={`${cell.count} taps on ${fmtDate(cell.date)}`}
+                />
+              ))}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
 
 function buildGrid(habits, weeks) {
-  const today = new Date();
   const todayD = parseDate(todayStr());
-  // anchor so rightmost column ends on today
-  // The last column may have fewer than 7 days if today isn't Saturday.
-  // Actually we'll do: each column is Sun-Sat. Last column's Saturday >= today.
   const dayOfWeek = todayD.getDay();
   const endOfWeek = new Date(todayD);
-  endOfWeek.setDate(endOfWeek.getDate() + (6 - dayOfWeek)); // upcoming Saturday
+  endOfWeek.setDate(endOfWeek.getDate() + (6 - dayOfWeek));
 
   const cols = [];
   const countByDate = new Map();
@@ -64,5 +82,6 @@ function buildGrid(habits, weeks) {
     }
     cols.push(col);
   }
+
   return { cols, max };
 }

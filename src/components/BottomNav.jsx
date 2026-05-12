@@ -3,8 +3,8 @@ import { Home, BarChart3, Settings as SettingsIcon, Plus } from 'lucide-react';
 
 /**
  * Floating Liquid Glass nav bar.
- * When `onFab` is provided, the nav pill sits on the LEFT and a FAB pill sits on the RIGHT.
- * When `onFab` is absent (other screens), the nav pill is centered.
+ * The nav pill is always left-anchored, and the FAB is right when on home.
+ * On desktop/tablet (>=768px) this is hidden; side nav takes over.
  */
 export default function BottomNav({ tab, onChange, onFab }) {
   const tabs = [
@@ -14,8 +14,8 @@ export default function BottomNav({ tab, onChange, onFab }) {
   ];
 
   return (
-    <div className={`bnav-row ${onFab ? 'with-fab' : ''}`}>
-      {/* Nav pill */}
+    <div className="bnav-row with-fab">
+      {/* Nav pill — always left side */}
       <div className="bnav" role="tablist">
         {tabs.map((t) => {
           const Icon = t.icon;
@@ -35,12 +35,15 @@ export default function BottomNav({ tab, onChange, onFab }) {
         })}
       </div>
 
-      {/* FAB pill — only on home screen */}
-      {onFab && (
-        <button className="fab-pill" onClick={onFab} aria-label="New habit">
-          <Plus strokeWidth={2.5} />
-        </button>
-      )}
+      {/* FAB pill — always rendered so nav stays left; invisible when not on home */}
+      <button
+        className="fab-pill"
+        onClick={onFab || undefined}
+        aria-label="New habit"
+        style={onFab ? undefined : { opacity: 0, pointerEvents: 'none' }}
+      >
+        <Plus strokeWidth={2.5} />
+      </button>
     </div>
   );
 }

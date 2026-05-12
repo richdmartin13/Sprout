@@ -9,9 +9,21 @@ import LogDetailsSheet from './sheets/LogDetailsSheet.jsx';
 import HabitOptionsSheet from './sheets/HabitOptionsSheet.jsx';
 import ConfirmSheet from './sheets/ConfirmSheet.jsx';
 import AlertSheet from './sheets/AlertSheet.jsx';
+import SettingsModals from './sheets/SettingsModals.jsx';
 import { loadData, saveData } from './lib/storage.js';
 import { applyTheme } from './lib/theme.js';
 import { normLog } from './lib/util.js';
+import { Home, BarChart3, Settings as SettingsIcon, Plus } from 'lucide-react';
+
+const SproutSymbol = ({ size = 36, color = '#f4f0e8' }) => (
+  <svg width={size} height={size} viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="77" y="96" width="6" height="34" rx="3" fill={color} opacity="0.92"/>
+    <path d="M80 95 C60 85 44 62 52 40 C60 18 80 30 80 52 Z" fill={color} opacity="0.92"/>
+    <path d="M80 95 C100 82 116 58 106 38 C96 18 80 32 80 54 Z" fill={color} opacity="0.55"/>
+    <circle cx="80" cy="122" r="20" stroke={color} strokeWidth="2.5" opacity="0.16"/>
+    <circle cx="80" cy="122" r="30" stroke={color} strokeWidth="1.2" opacity="0.07"/>
+  </svg>
+);
 
 export default function App() {
   const [data, setData] = useState(() => loadData());
@@ -20,34 +32,23 @@ export default function App() {
   const [backTab, setBackTab] = useState('home');
   const [sheet, setSheet] = useState(null);
   const [splashHidden, setSplashHidden] = useState(false);
+  // Settings modal state — lifted to root so it renders above nav layers
+  const [settingsModal, setSettingsModal] = useState(null);   // string | null
+  const [settingsModalMeta, setSettingsModalMeta] = useState(null); // extra callbacks for Data modal
 
-  // Persist on changes
+  useEffect(() => { saveData(data); }, [data]);
+  useEffect(() => { applyTheme(data.prefs); }, [data.prefs]);
   useEffect(() => {
-    saveData(data);
-  }, [data]);
-
-  // Apply theme on pref changes
-  useEffect(() => {
-    applyTheme(data.prefs);
-  }, [data.prefs]);
-
-  // Splash fade out
-  useEffect(() => {
-    const t = setTimeout(() => setSplashHidden(true), 280);
+    const t = setTimeout(() => setSplashHidden(true), 320);
     return () => clearTimeout(t);
   }, []);
 
-  const setPrefs = useCallback((next) => {
-    setData((d) => ({ ...d, prefs: next }));
-  }, []);
+  const setPrefs = useCallback((next) => setData((d) => ({ ...d, prefs: next })), []);
 
-  // ── Habit operations ──
   const upsertHabit = useCallback((next) => {
     setData((d) => {
       const exists = d.habits.some((h) => h.id === next.id);
-      const habits = exists
-        ? d.habits.map((h) => (h.id === next.id ? next : h))
-        : [...d.habits, next];
+      const habits = exists ? d.habits.map((h) => (h.id === next.id ? next : h)) : [...d.habits, next];
       return { ...d, habits };
     });
   }, []);
@@ -56,28 +57,15 @@ export default function App() {
     setData((d) => ({ ...d, habits: d.habits.filter((h) => h.id !== id) }));
   }, []);
 
-  // ── Logging ──
   const addLog = useCallback((habitId, log, opts = {}) => {
     const normed = normLog(log);
     setData((d) => ({
       ...d,
-      habits: d.habits.map((h) =>
-        h.id === habitId ? { ...h, logs: [...h.logs, normed] } : h
-      ),
+      habits: d.habits.map((h) => h.id === habitId ? { ...h, logs: [...h.logs, normed] } : h),
     }));
     if (opts.openDetails) {
-      // Open the details sheet on next tick so state has settled.
-      // We pass the normalized log directly; the latest habit will be picked up
-      // by the sheet from props since App re-renders.
       setTimeout(() => {
-        setSheet((prev) => {
-          // Don't stomp an already-open sheet.
-          if (prev) return prev;
-          // We need the up-to-date habit for the sheet's allHabits, but it will
-          // get the freshest copy from App's state via the prop passed below.
-          // So we just stash the ids and resolve at render time.
-          return { kind: 'logDetails', habitId, logId: normed.id };
-        });
+        setSheet((prev) => prev ? prev : { kind: 'logDetails', habitId, logId: normed.id });
       }, 30);
     }
   }, []);
@@ -86,9 +74,7 @@ export default function App() {
     setData((d) => ({
       ...d,
       habits: d.habits.map((h) =>
-        h.id === habitId
-          ? { ...h, logs: h.logs.map((l) => (l.id === nextLog.id ? nextLog : l)) }
-          : h
+        h.id === habitId ? { ...h, logs: h.logs.map((l) => (l.id === nextLog.id ? nextLog : l)) } : h
       ),
     }));
   }, []);
@@ -102,48 +88,35 @@ export default function App() {
     }));
   }, []);
 
-  // ── Sheet helpers ──
-  const onAlert = useCallback((title, body) => {
-    setSheet({ kind: 'alert', title, body });
-  }, []);
-  const onConfirm = useCallback((title, body, fn) => {
-    setSheet({ kind: 'confirm', title, body, fn });
-  }, []);
+  const onAlert = useCallback((title, body) => setSheet({ kind: 'alert', title, body }), []);
+  const onConfirm = useCallback((title, body, fn) => setSheet({ kind: 'confirm', title, body, fn }), []);
 
-  // ── Tab navigation ──
-  const goTab = (t) => {
-    setTab(t);
-    setCurrentHabitId(null);
-  };
-  const openHabit = (h) => {
-    setBackTab(tab);
-    setCurrentHabitId(h.id);
-    setTab('tap');
-  };
-  const goBackFromTap = () => {
-    setCurrentHabitId(null);
-    setTab(backTab || 'home');
-  };
+  const goTab = (t) => { setTab(t); setCurrentHabitId(null); };
+  const openHabit = (h) => { setBackTab(tab); setCurrentHabitId(h.id); setTab('tap'); };
+  const goBackFromTap = () => { setCurrentHabitId(null); setTab(backTab || 'home'); };
 
-  const currentHabit = currentHabitId
-    ? data.habits.find((h) => h.id === currentHabitId)
-    : null;
+  const currentHabit = currentHabitId ? data.habits.find((h) => h.id === currentHabitId) : null;
 
-  // If we navigated to tap but the habit was deleted, bounce back
   useEffect(() => {
-    if (tab === 'tap' && !currentHabit) {
-      setTab(backTab || 'home');
-    }
+    if (tab === 'tap' && !currentHabit) setTab(backTab || 'home');
   }, [tab, currentHabit, backTab]);
 
-  // ── Render the active screen ──
+  const handleOpenSettingsModal = useCallback((modalId, meta) => {
+    setSettingsModal(modalId);
+    setSettingsModalMeta(meta || null);
+  }, []);
+
+  const handleCloseSettingsModal = useCallback(() => {
+    setSettingsModal(null);
+    setSettingsModalMeta(null);
+  }, []);
+
+  const key = tab + (currentHabitId || '');
   let screen;
   if (tab === 'home') {
     screen = (
-      <HomeScreen
-        habits={data.habits}
-        prefs={data.prefs}
-        setPrefs={setPrefs}
+      <HomeScreen key={key}
+        habits={data.habits} prefs={data.prefs} setPrefs={setPrefs}
         onOpenHabit={openHabit}
         onLongPressHabit={(h) => setSheet({ kind: 'habitOptions', habit: h })}
         onNewHabit={() => setSheet({ kind: 'habit', habit: null })}
@@ -151,31 +124,21 @@ export default function App() {
     );
   } else if (tab === 'tap' && currentHabit) {
     screen = (
-      <TapScreen
-        habit={currentHabit}
-        habits={data.habits}
-        prefs={data.prefs}
-        onBack={goBackFromTap}
-        onLog={addLog}
-        onUpdateHabit={upsertHabit}
+      <TapScreen key={key}
+        habit={currentHabit} habits={data.habits} prefs={data.prefs}
+        onBack={goBackFromTap} onLog={addLog} onUpdateHabit={upsertHabit}
         onEditLog={(habit, log) => setSheet({ kind: 'logDetails', habit, log })}
         onDeleteLogRequested={(habit, log) =>
-          onConfirm(
-            'Delete log',
-            'Remove this entry? This cannot be undone.',
-            () => deleteLog(habit.id, log.id)
-          )
+          onConfirm('Delete log', 'Remove this entry? This cannot be undone.', () => deleteLog(habit.id, log.id))
         }
         onLongPressHabit={(h) => setSheet({ kind: 'habitOptions', habit: h })}
-        onAlert={onAlert}
-        onConfirm={onConfirm}
+        onAlert={onAlert} onConfirm={onConfirm}
       />
     );
   } else if (tab === 'insights') {
     screen = (
-      <AnalyticsScreen
-        habits={data.habits}
-        prefs={data.prefs}
+      <AnalyticsScreen key={key}
+        habits={data.habits} prefs={data.prefs}
         onEditLog={(habit, log) => setSheet({ kind: 'logDetails', habit, log })}
         onDeleteLogRequested={(habit, log) =>
           onConfirm('Delete log', 'Remove this entry?', () => deleteLog(habit.id, log.id))
@@ -184,47 +147,74 @@ export default function App() {
     );
   } else if (tab === 'settings') {
     screen = (
-      <SettingsScreen
-        data={data}
-        prefs={data.prefs}
-        setPrefs={setPrefs}
-        setData={setData}
-        onAlert={onAlert}
-        onConfirm={onConfirm}
+      <SettingsScreen key={key}
+        data={data} prefs={data.prefs} setPrefs={setPrefs} setData={setData}
+        onAlert={onAlert} onConfirm={onConfirm}
+        onOpenModal={handleOpenSettingsModal}
       />
     );
   }
 
+  const SIDE_TABS = [
+    { id: 'home',     label: 'Habits',    icon: Home },
+    { id: 'insights', label: 'Analytics', icon: BarChart3 },
+    { id: 'settings', label: 'Settings',  icon: SettingsIcon },
+  ];
+
   return (
     <>
       <Splash hidden={splashHidden} />
+
+      {/* Desktop Side Nav */}
+      <nav className="side-nav" aria-label="Main navigation">
+        <div className="side-nav-logo">
+          <div className="side-nav-logo-icon">
+            <SproutSymbol size={22} color="#f4f0e8" />
+          </div>
+          <span className="side-nav-logo-name">Sprout</span>
+        </div>
+        {SIDE_TABS.map((t) => {
+          const Icon = t.icon;
+          return (
+            <button key={t.id}
+              className={`side-nav-btn ${tab === t.id ? 'on' : ''}`}
+              onClick={() => goTab(t.id)}
+              aria-label={t.label}
+              aria-current={tab === t.id ? 'page' : undefined}
+            >
+              <Icon strokeWidth={2} />
+              {t.label}
+            </button>
+          );
+        })}
+        <button className="side-nav-fab"
+          onClick={() => setSheet({ kind: 'habit', habit: null })}
+          aria-label="New habit"
+        >
+          <Plus strokeWidth={2.5} />
+          New Habit
+        </button>
+      </nav>
+
       <div className="app">
-        {screen}
+        <div className="screen-transition" key={key}>{screen}</div>
         {tab !== 'tap' && (
-          <BottomNav
-            tab={tab}
-            onChange={goTab}
+          <BottomNav tab={tab} onChange={goTab}
             onFab={tab === 'home' ? () => setSheet({ kind: 'habit', habit: null }) : undefined}
           />
         )}
       </div>
 
-      {/* Sheets */}
+      {/* ── All sheets/modals rendered at root — always above nav ── */}
+
       {sheet?.kind === 'habit' && (
-        <HabitSheet
-          habit={sheet.habit}
-          allHabits={data.habits}
+        <HabitSheet habit={sheet.habit} allHabits={data.habits}
           onClose={() => setSheet(null)}
-          onSave={(next) => {
-            upsertHabit(next);
-            setSheet(null);
-          }}
+          onSave={(next) => { upsertHabit(next); setSheet(null); }}
         />
       )}
 
       {sheet?.kind === 'logDetails' && (() => {
-        // The sheet stores either {habit, log} (legacy direct refs from edits) or
-        // {habitId, logId} (post-tap with deferred resolution). Resolve to fresh refs.
         const habit = sheet.habit
           ? data.habits.find((h) => h.id === sheet.habit.id) || sheet.habit
           : data.habits.find((h) => h.id === sheet.habitId);
@@ -233,55 +223,45 @@ export default function App() {
           : habit?.logs.find((l) => l.id === sheet.logId);
         if (!habit || !log) return null;
         return (
-          <LogDetailsSheet
-            habit={habit}
-            log={log}
-            prefs={data.prefs}
-            allHabits={data.habits}
+          <LogDetailsSheet habit={habit} log={log} prefs={data.prefs} allHabits={data.habits}
             onClose={() => setSheet(null)}
-            onSave={(nextLog) => {
-              updateLog(habit.id, nextLog);
-              setSheet(null);
-            }}
+            onSave={(nextLog) => { updateLog(habit.id, nextLog); setSheet(null); }}
           />
         );
       })()}
 
       {sheet?.kind === 'habitOptions' && (
-        <HabitOptionsSheet
-          habit={sheet.habit}
+        <HabitOptionsSheet habit={sheet.habit}
           onClose={() => setSheet(null)}
           onEdit={() => setSheet({ kind: 'habit', habit: sheet.habit })}
-          onDelete={() =>
-            setSheet({
-              kind: 'confirm',
-              title: 'Delete habit',
-              body: `Permanently delete "${sheet.habit.name}" and all its logs?`,
-              fn: () => {
-                deleteHabit(sheet.habit.id);
-                if (currentHabitId === sheet.habit.id) goBackFromTap();
-              },
-            })
-          }
+          onDelete={() => setSheet({
+            kind: 'confirm',
+            title: 'Delete habit',
+            body: `Permanently delete "${sheet.habit.name}" and all its logs?`,
+            fn: () => { deleteHabit(sheet.habit.id); if (currentHabitId === sheet.habit.id) goBackFromTap(); },
+          })}
         />
       )}
 
       {sheet?.kind === 'confirm' && (
-        <ConfirmSheet
-          title={sheet.title}
-          body={sheet.body}
+        <ConfirmSheet title={sheet.title} body={sheet.body}
           onClose={() => setSheet(null)}
-          onConfirm={() => sheet.fn && sheet.fn()}
+          onConfirm={() => { sheet.fn?.(); setSheet(null); }}
         />
       )}
 
       {sheet?.kind === 'alert' && (
-        <AlertSheet
-          title={sheet.title}
-          body={sheet.body}
-          onClose={() => setSheet(null)}
-        />
+        <AlertSheet title={sheet.title} body={sheet.body} onClose={() => setSheet(null)} />
       )}
+
+      {/* Settings modals — rendered last so they're on top of everything */}
+      <SettingsModals
+        modal={settingsModal}
+        modalMeta={settingsModalMeta}
+        onClose={handleCloseSettingsModal}
+        prefs={data.prefs}
+        setPrefs={setPrefs}
+      />
     </>
   );
 }
@@ -289,7 +269,15 @@ export default function App() {
 function Splash({ hidden }) {
   return (
     <div className={`splash ${hidden ? 'hide' : ''}`}>
-      <img src="./icons/splash-logo.png" alt="Sprout" />
+      <div className="splash-icon">
+        <svg width="60" height="60" viewBox="0 0 160 160" fill="none">
+          <rect x="77" y="96" width="6" height="34" rx="3" fill="#f4f0e8" opacity="0.92"/>
+          <path d="M80 95 C60 85 44 62 52 40 C60 18 80 30 80 52 Z" fill="#f4f0e8" opacity="0.92"/>
+          <path d="M80 95 C100 82 116 58 106 38 C96 18 80 32 80 54 Z" fill="#f4f0e8" opacity="0.55"/>
+          <circle cx="80" cy="122" r="20" stroke="#f4f0e8" strokeWidth="2.5" opacity="0.16"/>
+          <circle cx="80" cy="122" r="30" stroke="#f4f0e8" strokeWidth="1.2" opacity="0.07"/>
+        </svg>
+      </div>
       <div className="splash-name">Sprout</div>
       <div className="splash-tag">grow what you tend</div>
     </div>

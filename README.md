@@ -1,85 +1,57 @@
-# Sprout
+# Sprout Web — sproutWeb_2025.05.12#1
 
-A local-first habit tracker PWA. All data lives in your browser's localStorage — no accounts, no server, no network calls.
+A local-first habit tracker PWA built with React + Vite.
 
-> *grow what you tend*
-
-## Features
-
-- **3 tabs**: Habits (list/grid with sparklines), Tap/Detail screen (per habit), Analytics, and Settings
-- **Three habit types**: Start (good), Stop (bad), Neutral — each with type-specific logging fields
-- **Rich logs**: ease, mood, energy, duration, trigger, outcome, context, tags, notes, co-occurrences with other habits, and **editable timestamps**
-- **Analytics**: heatmap (tap a day to focus it), spider chart with five views (freq/mood/energy/ease/resistance), trends, rankings, mood & energy bars, time-of-day & day-of-week patterns, tag cloud, resistance breakdown, co-occurrence pairs, log list — all filterable by category (radio) and type (multi)
-- **Apple Liquid Glass aesthetic**: layered translucency, backdrop blur, accent-driven ambient glow, film grain, soft motion
-- **Light + dark, six accent schemes**: indigo, violet, ocean, ember, moss, rose — each adjusts heatmap ramp, accent, FAB gradient, and ambient glow
-- **iOS PWA-ready**: manifest, apple-touch icons, status bar styling, safe-area insets, service worker for installability
-- **Export / import** JSON, **clear all data**
-- Long-press habit cards for options · long-press the tap zone for a context menu
-
-## Setup
-
-Requires Node 18+ and npm.
+## Quick Start
 
 ```bash
 npm install
-npm run dev      # localhost:5173
-npm run build    # outputs to ./dist
-npm run preview  # preview the production build
+npm run dev
 ```
 
-## Deploying
+Open `http://localhost:5173` in your browser.
 
-After `npm run build`, the contents of `dist/` are a fully static site. Host it on anything that serves files. No backend needed.
+## Build for Production
 
-Because `vite.config.js` uses `base: './'`, the built `index.html` references assets relatively, so it works from any sub-path.
+```bash
+npm run build
+npm run preview
+```
 
-### GitHub → Render (static site)
+## Deploy
 
-1. Create a new GitHub repo and push this project to it:
-   ```bash
-   git init
-   git add .
-   git commit -m "Initial commit"
-   git branch -M main
-   git remote add origin https://github.com/<you>/<repo>.git
-   git push -u origin main
-   ```
-2. On [Render](https://render.com): **New + → Static Site → Connect your repo**.
-3. Settings:
-   - **Build Command**: `npm install && npm run build`
-   - **Publish Directory**: `dist`
-   - **Node version**: 18 or newer (set via the `NODE_VERSION` env var if needed)
-4. Click **Create Static Site**. Render will build and serve it. Push to `main` to redeploy.
+### Render
+The `render.yaml` file is included for one-click Render deployment.
 
-A `render.yaml` is included in the repo root, so on Render you can alternatively pick **Blueprint** instead of Static Site and it will pre-fill those settings.
+### Vercel / Netlify
+Build command: `npm run build`  
+Output directory: `dist`
+
+## Features
+
+- **Three-tab navigation**: Habits, Analytics, Settings
+- **Liquid Glass UI**: iOS 26-inspired glass morphism (used sparingly on nav)
+- **7 color schemes** × light/dark mode
+- **Brand Sprout theme** (default): deep greens + cream palette
+- **Desktop side navigation** at ≥768px viewport width
+- **Analytics**: heatmap, trends, spider charts, time patterns, tags, co-occurrence
+- **Data export/import**: JSON format compatible with sproutNative
+- **PWA**: installable, works offline, service worker included
 
 ## Data
 
-Everything is stored under `localStorage` key `sprout_v1`. To migrate to another device, use **Settings → Export** to download a JSON file, then **Settings → Import** on the other device. Import is a merge by id — it won't duplicate existing habits or logs.
-
-## Stack
-
-- **Vite** + **React 18**
-- **lucide-react** for vector icons (only runtime dependency apart from React)
-- Hand-written CSS with backdrop-filter + CSS custom properties for the theming engine
-- A tiny cache-first service worker for offline installability
-
-## Project layout
+All data is stored in `localStorage`. No server calls are made. Export uses the naming convention:
 
 ```
-src/
-  App.jsx                 — orchestrator: state, sheets, tab routing
-  main.jsx                — React entry + SW registration
-  components/             — Heatmap, Spider, TrendsChart, BottomNav, Filters, HabitCard, LogRow
-  screens/                — HomeScreen, TapScreen, AnalyticsScreen, SettingsScreen
-  sheets/                 — HabitSheet, LogDetailsSheet, HabitOptionsSheet, ConfirmSheet, AlertSheet
-  hooks/useLongPress.js   — 600ms hold, 10px tolerance, click suppression
-  lib/
-    theme.js              — color schemes, applyTheme()
-    util.js               — date/time/tag/normalization helpers
-    storage.js            — load/save/export/import
-    stats.js              — counts, streaks, co-occurrence, hourly, trends, etc.
-  styles/global.css       — the glass system, components, dark + light tokens
-public/
-  manifest.webmanifest, sw.js, icons/, favicon.ico
+sproutData_yyyy.mm.dd#hh.mm.json
 ```
+
+This format is interoperable with the native app.
+
+## Tech Stack
+
+- React 18
+- Vite 5
+- Lucide React (icons)
+- CSS Custom Properties (theming)
+- Service Worker (PWA/offline)

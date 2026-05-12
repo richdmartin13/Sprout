@@ -1,8 +1,15 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState, useMemo } from 'react';
 import { X, Star } from 'lucide-react';
 import { MOOD_OPTS, ENERGY_OPTS, slugTag, pad, normLog } from '../lib/util.js';
 
-// When editing, we receive { habit, log }. When new, log has minimal fields.
+// Common tags to suggest in the tags field
+const COMMON_TAGS = [
+  'morning', 'evening', 'work', 'home', 'outdoor',
+  'social', 'solo', 'stressed', 'relaxed', 'motivated',
+  'tired', 'food', 'coffee', 'gym', 'walk', 'weekend',
+  'routine', 'spontaneous', 'mindful', 'distracted',
+];
+
 export default function LogDetailsSheet({ habit, log, prefs, allHabits, onClose, onSave }) {
   const track = prefs.track;
   const [ease, setEase] = useState(log.ease || 0);
@@ -17,7 +24,6 @@ export default function LogDetailsSheet({ habit, log, prefs, allHabits, onClose,
   const [notes, setNotes] = useState(log.notes || '');
   const [withHabits, setWithHabits] = useState(log.withHabits || []);
 
-  // Editable timestamp
   const ts0 = log.ts ? new Date(log.ts) : new Date();
   const [dateVal, setDateVal] = useState(
     `${ts0.getFullYear()}-${pad(ts0.getMonth() + 1)}-${pad(ts0.getDate())}`
@@ -26,14 +32,30 @@ export default function LogDetailsSheet({ habit, log, prefs, allHabits, onClose,
 
   const tagInputRef = useRef(null);
 
+  // Suggested tags: common tags not yet added, plus habit-specific tags from prior logs
+  const suggestedTags = useMemo(() => {
+    const habitTags = new Set();
+    for (const l of habit.logs) {
+      for (const t of (l.tags || [])) habitTags.add(t);
+    }
+    const combined = [...habitTags, ...COMMON_TAGS];
+    const seen = new Set();
+    return combined.filter((t) => {
+      if (seen.has(t)) return false;
+      seen.add(t);
+      return !tags.includes(t);
+    }).slice(0, 16);
+  }, [habit.logs, tags]);
+
   const commitTag = () => {
     const t = slugTag(tagDraft);
-    if (!t) {
-      setTagDraft('');
-      return;
-    }
+    if (!t) { setTagDraft(''); return; }
     if (!tags.includes(t)) setTags([...tags, t]);
     setTagDraft('');
+  };
+
+  const addSuggestedTag = (t) => {
+    if (!tags.includes(t)) setTags([...tags, t]);
   };
 
   const onTagKey = (e) => {
@@ -52,14 +74,12 @@ export default function LogDetailsSheet({ habit, log, prefs, allHabits, onClose,
   };
 
   const onSubmit = () => {
-    // Combine date + time
     const [hh, mm] = timeVal.split(':').map(Number);
     const [y, mo, d] = dateVal.split('-').map(Number);
     const dt = new Date(y, mo - 1, d, hh || 0, mm || 0);
     const finalTs = dt.toISOString();
     const finalDate = `${y}-${pad(mo)}-${pad(d)}`;
 
-    // Auto-add trigger as tag for stop habits
     let finalTags = [...tags];
     if (habit.type === 'st' && trigger.trim()) {
       const t = slugTag(trigger);
@@ -98,32 +118,18 @@ export default function LogDetailsSheet({ habit, log, prefs, allHabits, onClose,
         <div className="field">
           <label>When</label>
           <div className="time-input">
-            <input
-              type="date"
-              value={dateVal}
-              onChange={(e) => setDateVal(e.target.value)}
-            />
-            <input
-              type="time"
-              value={timeVal}
-              onChange={(e) => setTimeVal(e.target.value)}
-            />
+            <input type="date" value={dateVal} onChange={(e) => setDateVal(e.target.value)} />
+            <input type="time" value={timeVal} onChange={(e) => setTimeVal(e.target.value)} />
           </div>
         </div>
 
-        {/* Start-specific: ease */}
         {habit.type === 'go' && track.ease && (
           <div className="field">
             <label>Ease</label>
             <div className="stars">
               {[1, 2, 3, 4, 5].map((n) => (
-                <button
-                  key={n}
-                  type="button"
-                  className={n <= ease ? 'on' : ''}
-                  onClick={() => setEase(ease === n ? 0 : n)}
-                  aria-label={`${n} of 5`}
-                >
+                <button key={n} type="button" className={n <= ease ? 'on' : ''}
+                  onClick={() => setEase(ease === n ? 0 : n)} aria-label={`${n} of 5`}>
                   <Star fill={n <= ease ? '#f5b942' : 'none'} />
                 </button>
               ))}
@@ -131,108 +137,66 @@ export default function LogDetailsSheet({ habit, log, prefs, allHabits, onClose,
           </div>
         )}
 
-        {/* Start-specific: duration */}
         {habit.type === 'go' && track.duration && (
           <div className="field">
             <label>Duration (minutes)</label>
-            <input
-              type="number"
-              min="0"
-              value={duration}
-              onChange={(e) => setDuration(e.target.value)}
-              placeholder="e.g. 20"
-            />
+            <input type="number" min="0" value={duration}
+              onChange={(e) => setDuration(e.target.value)} placeholder="e.g. 20" />
           </div>
         )}
 
-        {/* Stop-specific: outcome */}
         {habit.type === 'st' && track.resist && (
           <div className="field">
             <label>Outcome</label>
             <div className="btn-row outcome">
-              {[
-                ['no', 'Gave in'],
-                ['partial', 'Partial'],
-                ['yes', 'Resisted'],
-              ].map(([k, lbl]) => (
-                <button
-                  key={k}
-                  type="button"
-                  className={resist === k ? 'on ' + k : ''}
-                  onClick={() => setResist(k)}
-                >
-                  {lbl}
-                </button>
+              {[['no', 'Gave in'], ['partial', 'Partial'], ['yes', 'Resisted']].map(([k, lbl]) => (
+                <button key={k} type="button" className={resist === k ? 'on ' + k : ''}
+                  onClick={() => setResist(k)}>{lbl}</button>
               ))}
             </div>
           </div>
         )}
 
-        {/* Stop-specific: trigger */}
         {habit.type === 'st' && track.trigger && (
           <div className="field">
             <label>Trigger</label>
-            <input
-              type="text"
-              value={trigger}
-              onChange={(e) => setTrigger(e.target.value)}
-              placeholder="e.g. stress, boredom"
-            />
+            <input type="text" value={trigger}
+              onChange={(e) => setTrigger(e.target.value)} placeholder="e.g. stress, boredom" />
           </div>
         )}
 
-        {/* Neutral-specific: context */}
         {habit.type === 'ne' && track.context && (
           <div className="field">
             <label>Context</label>
-            <input
-              type="text"
-              value={context}
-              onChange={(e) => setContext(e.target.value)}
-              placeholder="e.g. with coffee"
-            />
+            <input type="text" value={context}
+              onChange={(e) => setContext(e.target.value)} placeholder="e.g. with coffee" />
           </div>
         )}
 
-        {/* Mood */}
         {track.mood && (
           <div className="field">
             <label>Mood</label>
             <div className="btn-row" style={{ '--cols': 3 }}>
               {MOOD_OPTS.map((m) => (
-                <button
-                  key={m}
-                  type="button"
-                  className={mood === m ? 'on' : ''}
-                  onClick={() => setMood(mood === m ? '' : m)}
-                >
-                  {m}
-                </button>
+                <button key={m} type="button" className={mood === m ? 'on' : ''}
+                  onClick={() => setMood(mood === m ? '' : m)}>{m}</button>
               ))}
             </div>
           </div>
         )}
 
-        {/* Energy */}
         {track.energy && (
           <div className="field">
             <label>Energy</label>
             <div className="btn-row" style={{ '--cols': 3 }}>
               {ENERGY_OPTS.map((m) => (
-                <button
-                  key={m}
-                  type="button"
-                  className={energy === m ? 'on' : ''}
-                  onClick={() => setEnergy(energy === m ? '' : m)}
-                >
-                  {m}
-                </button>
+                <button key={m} type="button" className={energy === m ? 'on' : ''}
+                  onClick={() => setEnergy(energy === m ? '' : m)}>{m}</button>
               ))}
             </div>
           </div>
         )}
 
-        {/* Tags */}
         {track.tags && (
           <div className="field">
             <label>Tags</label>
@@ -240,9 +204,8 @@ export default function LogDetailsSheet({ habit, log, prefs, allHabits, onClose,
               {tags.map((t) => (
                 <span key={t} className="tag-chip">
                   #{t}
-                  <button type="button" onClick={(e) => { e.stopPropagation(); removeTag(t); }} aria-label={`Remove ${t}`}>
-                    <X size={12} />
-                  </button>
+                  <button type="button" onClick={(e) => { e.stopPropagation(); removeTag(t); }}
+                    aria-label={`Remove ${t}`}><X size={12} /></button>
                 </span>
               ))}
               <input
@@ -254,39 +217,42 @@ export default function LogDetailsSheet({ habit, log, prefs, allHabits, onClose,
                 placeholder={tags.length === 0 ? 'add tag…' : ''}
               />
             </div>
+            {/* Common tag suggestions */}
+            {suggestedTags.length > 0 && (
+              <div className="tag-suggestions">
+                {suggestedTags.slice(0, 10).map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    className="tag-suggestion-chip"
+                    onClick={() => addSuggestedTag(t)}
+                  >
+                    #{t}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
-        {/* With other habits */}
         {allHabits.length > 1 && (
           <div className="field">
             <label>Along with</label>
             <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
-              {allHabits
-                .filter((h) => h.id !== habit.id)
-                .map((h) => (
-                  <button
-                    key={h.id}
-                    type="button"
-                    className={`chip ${withHabits.includes(h.id) ? 'on' : ''}`}
-                    onClick={() => toggleWith(h.id)}
-                  >
-                    {h.name}
-                  </button>
-                ))}
+              {allHabits.filter((h) => h.id !== habit.id).map((h) => (
+                <button key={h.id} type="button"
+                  className={`chip ${withHabits.includes(h.id) ? 'on' : ''}`}
+                  onClick={() => toggleWith(h.id)}>{h.name}</button>
+              ))}
             </div>
           </div>
         )}
 
-        {/* Notes */}
         {track.notes && (
           <div className="field">
             <label>Notes</label>
-            <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="anything else…"
-            />
+            <textarea value={notes} onChange={(e) => setNotes(e.target.value)}
+              placeholder="anything else…" />
           </div>
         )}
 
